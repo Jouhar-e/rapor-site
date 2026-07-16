@@ -13,7 +13,7 @@
                                 'create' => 'heroicon-m-plus',
                                 'update' => 'heroicon-m-pencil',
                                 'delete' => 'heroicon-m-trash',
-                                default => 'heroicon-m-circle',
+                                default => 'heroicon-m-circle-stack',
                             }"
                             class="h-4 w-4"
                         />

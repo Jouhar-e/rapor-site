@@ -163,8 +163,11 @@ class ManageLearnerExtracurricularPivot extends Page implements HasTable
         $components[] = Select::make('semester_id')
             ->label('Semester')
             ->options(fn () => $this->academic_year_id
-                ? Semester::where('academic_year_id', $this->academic_year_id)->pluck('name', 'id')
-                : Semester::pluck('name', 'id')
+                ? Semester::where('academic_year_id', $this->academic_year_id)
+                    ->whereHas('academicYear', fn ($q) => $q->where('is_archived', false))
+                    ->pluck('name', 'id')
+                : Semester::whereHas('academicYear', fn ($q) => $q->where('is_archived', false))
+                    ->pluck('name', 'id')
             )
             ->placeholder('Semua Semester')
             ->live()
@@ -275,21 +278,23 @@ class ManageLearnerExtracurricularPivot extends Page implements HasTable
     public function updatedAcademicYearId(): void
     {
         $this->semester_id = null;
+        $this->resetTable();
     }
 
     public function updatedSemesterId(): void
     {
-        //
+        $this->resetTable();
     }
 
     public function updatedClassId(): void
     {
         $this->academic_year_id = null;
         $this->semester_id = null;
+        $this->resetTable();
     }
 
     public function updatedExtracurricularId(): void
     {
-        //
+        $this->resetTable();
     }
 }

@@ -13,6 +13,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -61,7 +62,14 @@ class ClassLearnerResource extends Resource
             TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             TextColumn::make('updated_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
         ])->filters([
-            //
+            SelectFilter::make('academic_year_id')
+                ->label('Tahun Ajaran')
+                ->relationship('academicYear', 'name', fn ($query) => $query->where('is_archived', false))
+                ->placeholder('Semua Tahun Ajaran'),
+            SelectFilter::make('semester_id')
+                ->label('Semester')
+                ->relationship('semester', 'name', fn ($query) => $query->whereHas('academicYear', fn ($q) => $q->where('is_archived', false)))
+                ->placeholder('Semua Semester'),
         ])
             ->recordActions([
                 EditAction::make(),

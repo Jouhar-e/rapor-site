@@ -9,6 +9,7 @@ use App\Models\ClassLearner;
 use App\Models\Grade;
 use App\Models\HomeroomTeacher;
 use App\Models\Learner;
+use App\Models\Semester;
 use App\Services\GradeService;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -279,15 +280,33 @@ class GradeResource extends Resource
                     ->relationship('subject', 'name')
                     ->placeholder('Semua Mata Pelajaran')
                     ->multiple(),
-                SelectFilter::make('subject_id')
-                    ->label('Mata Pelajaran')
-                    ->relationship('subject', 'name')
-                    ->placeholder('Semua Mata Pelajaran')
-                    ->multiple(),
                 SelectFilter::make('academic_year_id')
                     ->label('Tahun Ajaran')
                     ->relationship('academicYear', 'name', fn ($query) => $query->where('is_archived', false)->where('is_active', true))
                     ->placeholder('Semua Tahun Ajaran'),
+                SelectFilter::make('semester_id')
+                    ->label('Semester')
+                    ->placeholder('Semua Semester')
+                    ->options(function (callable $get): array {
+                        $academicYearId = $get('academic_year_id');
+
+                        $query = Semester::whereHas('academicYear', fn ($q) => $q->where('is_archived', false));
+
+                        if ($academicYearId) {
+                            $query->where('academic_year_id', $academicYearId);
+                        }
+
+                        return $query->pluck('name', 'id')->toArray();
+                    })
+                    ->query(function (Builder $query, array $data): Builder {
+                        $semesterIds = $data['values'] ?? [];
+
+                        if (empty($semesterIds)) {
+                            return $query;
+                        }
+
+                        return $query->whereIn('semester_id', $semesterIds);
+                    }),
             ])
             ->recordActions([
                 EditAction::make(),

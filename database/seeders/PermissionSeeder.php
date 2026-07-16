@@ -58,7 +58,6 @@ class PermissionSeeder extends Seeder
             'import.tutor', 'import.learner', 'import.grade', 'import.attendance', 'import.homeroom-note', 'import.extracurricular',
             'export.grade',
             'promotion.view',
-            'report.view',
             'learner-report.view',
         ]);
     }

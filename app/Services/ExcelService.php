@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Classes;
 use Illuminate\Support\Collection;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -453,6 +454,137 @@ class ExcelService
 
         $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         $response->headers->set('Content-Disposition', 'attachment; filename="'.$cleanName.'"');
+
+        return $response;
+    }
+
+    public function exportReport(string $filename, array $headers, iterable $rows, callable $mapper): StreamedResponse
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+
+        foreach ($headers as $i => $header) {
+            $col = Coordinate::stringFromColumnIndex($i + 1);
+            $sheet->setCellValue($col.'1', $header);
+            $sheet->getStyle($col.'1')->getFont()->setBold(true);
+            $sheet->getColumnDimension($col)->setWidth(20);
+        }
+
+        $row = 2;
+        foreach ($rows as $item) {
+            $data = $mapper($item);
+            foreach ($data as $i => $value) {
+                $col = Coordinate::stringFromColumnIndex($i + 1);
+                $sheet->setCellValue($col.$row, $value ?? '');
+            }
+            $row++;
+        }
+
+        $cleanName = preg_replace('/[^\w\-\.]/', '_', $filename);
+        $ext = '.xlsx';
+        if (! str_ends_with($cleanName, $ext)) {
+            $cleanName .= $ext;
+        }
+
+        $response = new StreamedResponse(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        });
+
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', 'attachment; filename="'.$cleanName.'"');
+
+        return $response;
+    }
+
+    public function downloadTutorTemplate(): StreamedResponse
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $headers = ['nip', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'phone', 'email', 'is_active', 'password'];
+
+        foreach ($headers as $i => $header) {
+            $col = Coordinate::stringFromColumnIndex($i + 1);
+            $sheet->setCellValue($col.'1', $header);
+            $sheet->getStyle($col.'1')->getFont()->setBold(true);
+        }
+
+        $sheet->getColumnDimension('A')->setWidth(15);
+        $sheet->getColumnDimension('B')->setWidth(30);
+        $sheet->getColumnDimension('C')->setWidth(12);
+        $sheet->getColumnDimension('D')->setWidth(15);
+        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('F')->setWidth(30);
+        $sheet->getColumnDimension('G')->setWidth(15);
+        $sheet->getColumnDimension('H')->setWidth(25);
+        $sheet->getColumnDimension('I')->setWidth(10);
+        $sheet->getColumnDimension('J')->setWidth(20);
+
+        $sheet->setCellValue('A2', 'T001');
+        $sheet->setCellValue('B2', 'Budi Santoso');
+        $sheet->setCellValue('C2', 'L');
+        $sheet->setCellValue('D2', 'Jakarta');
+        $sheet->setCellValue('E2', '1990-01-15');
+        $sheet->setCellValue('F2', 'Jl. Merdeka No.1');
+        $sheet->setCellValue('G2', '081234567890');
+        $sheet->setCellValue('H2', 'budi@example.com');
+        $sheet->setCellValue('I2', '1');
+        $sheet->setCellValue('J2', 'password123');
+
+        $response = new StreamedResponse(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        });
+
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', 'attachment; filename="format-import-tutor.xlsx"');
+
+        return $response;
+    }
+
+    public function downloadLearnerTemplate(): StreamedResponse
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $headers = ['nis', 'nisn', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'status', 'class_name', 'religion', 'child_order', 'phone', 'admission_date', 'admission_class', 'admission_status', 'father_name', 'father_job', 'mother_name', 'mother_job', 'guardian_name', 'guardian_job', 'report_number'];
+
+        foreach ($headers as $i => $header) {
+            $col = Coordinate::stringFromColumnIndex($i + 1);
+            $sheet->setCellValue($col.'1', $header);
+            $sheet->getStyle($col.'1')->getFont()->setBold(true);
+        }
+
+        foreach (range('A', 'V') as $col) {
+            $sheet->getColumnDimension($col)->setWidth(18);
+        }
+
+        $sheet->setCellValue('A2', '12345');
+        $sheet->setCellValue('B2', '1234567890');
+        $sheet->setCellValue('C2', 'Siti Aisyah');
+        $sheet->setCellValue('D2', 'P');
+        $sheet->setCellValue('E2', 'Jakarta');
+        $sheet->setCellValue('F2', '2010-05-10');
+        $sheet->setCellValue('G2', 'Jl. Merdeka No.1');
+        $sheet->setCellValue('H2', 'aktif');
+        $sheet->setCellValue('I2', 'Kelas X.1');
+        $sheet->setCellValue('J2', 'Islam');
+        $sheet->setCellValue('K2', '1');
+        $sheet->setCellValue('L2', '08123456789');
+        $sheet->setCellValue('M2', '2024-07-15');
+        $sheet->setCellValue('N2', 'Paket A');
+        $sheet->setCellValue('O2', 'baru');
+        $sheet->setCellValue('P2', 'Ahmad');
+        $sheet->setCellValue('Q2', 'Petani');
+        $sheet->setCellValue('R2', 'Siti');
+        $sheet->setCellValue('S2', 'Ibu Rumah Tangga');
+
+        $response = new StreamedResponse(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        });
+
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', 'attachment; filename="format-import-peserta.xlsx"');
 
         return $response;
     }

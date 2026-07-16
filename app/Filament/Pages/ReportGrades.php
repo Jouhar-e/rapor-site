@@ -7,6 +7,7 @@ use App\Models\Classes;
 use App\Models\Grade;
 use App\Models\Semester;
 use App\Models\Subject;
+use App\Services\ExcelService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -50,6 +51,13 @@ class ReportGrades extends Page implements HasTable
         $this->form->fill();
     }
 
+    public function updated($propertyName): void
+    {
+        if (str_starts_with($propertyName, 'filters.')) {
+            $this->resetTable();
+        }
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema
@@ -59,22 +67,31 @@ class ReportGrades extends Page implements HasTable
                     ->options(AcademicYear::where('is_archived', false)->where('is_active', true)->pluck('name', 'id'))
                     ->placeholder('Semua')
                     ->reactive()
-                    ->afterStateUpdated(fn (callable $set) => $set('semester_id', null)),
+                    ->afterStateUpdated(function (callable $set) {
+                        $set('semester_id', null);
+                        $this->resetTable();
+                    }),
                 Select::make('semester_id')
                     ->label('Semester')
+                    ->reactive()
                     ->options(fn (callable $get) => Semester::when(
                         $get('academic_year_id'),
                         fn (Builder $q, $v) => $q->where('academic_year_id', $v)
                     )->whereHas('academicYear', fn ($q) => $q->where('is_archived', false))->pluck('name', 'id'))
-                    ->placeholder('Semua'),
+                    ->placeholder('Semua')
+                    ->afterStateUpdated(fn () => $this->resetTable()),
                 Select::make('class_id')
                     ->label('Kelas')
                     ->options(Classes::pluck('name', 'id'))
-                    ->placeholder('Semua'),
+                    ->placeholder('Semua')
+                    ->reactive()
+                    ->afterStateUpdated(fn () => $this->resetTable()),
                 Select::make('subject_id')
                     ->label('Mata Pelajaran')
                     ->options(Subject::pluck('name', 'id'))
-                    ->placeholder('Semua'),
+                    ->placeholder('Semua')
+                    ->reactive()
+                    ->afterStateUpdated(fn () => $this->resetTable()),
             ])
             ->statePath('filters');
     }
@@ -106,7 +123,7 @@ class ReportGrades extends Page implements HasTable
             ])
             ->headerActions([
                 Action::make('exportCsv')
-                    ->label('Ekspor CSV')
+                    ->label('Ekspor Excel')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(fn () => $this->exportCsv()),
             ]);
@@ -124,7 +141,7 @@ class ReportGrades extends Page implements HasTable
             ))
             ->get();
 
-        return $this->streamCsv('grades.csv', [
+        return app(ExcelService::class)->exportReport('grades.xlsx', [
             'Nama Warga Belajar', 'Mata Pelajaran', 'Nilai Tugas', 'Nilai PTS',
             'Nilai PAS', 'Nilai Praktik', 'Nilai Akhir', 'Predikat',
             'Tahun Ajaran', 'Semester', 'Status',
@@ -141,17 +158,5 @@ class ReportGrades extends Page implements HasTable
             $row->semester?->name,
             $row->status,
         ]);
-    }
-
-    protected function streamCsv(string $filename, array $headers, iterable $rows, callable $mapper): StreamedResponse
-    {
-        return response()->streamDownload(function () use ($headers, $rows, $mapper): void {
-            $handle = fopen('php://output', 'wb');
-            fputcsv($handle, $headers);
-            foreach ($rows as $row) {
-                fputcsv($handle, $mapper($row));
-            }
-            fclose($handle);
-        }, $filename);
     }
 }

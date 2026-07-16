@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Program;
 use App\Models\Tutor;
+use App\Services\ExcelService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -47,6 +48,13 @@ class ReportTutors extends Page implements HasTable
         $this->form->fill();
     }
 
+    public function updated($propertyName): void
+    {
+        if (str_starts_with($propertyName, 'filters.')) {
+            $this->resetTable();
+        }
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema
@@ -57,11 +65,15 @@ class ReportTutors extends Page implements HasTable
                         '1' => 'Aktif',
                         '0' => 'Nonaktif',
                     ])
-                    ->placeholder('Semua Status'),
+                    ->placeholder('Semua Status')
+                    ->reactive()
+                    ->afterStateUpdated(fn () => $this->resetTable()),
                 Select::make('program_id')
                     ->label('Program')
                     ->options(Program::pluck('name', 'id'))
-                    ->placeholder('Semua Program'),
+                    ->placeholder('Semua Program')
+                    ->reactive()
+                    ->afterStateUpdated(fn () => $this->resetTable()),
             ])
             ->statePath('filters');
     }
@@ -73,7 +85,7 @@ class ReportTutors extends Page implements HasTable
                 Tutor::query()
                     ->when($this->filters['status'] ?? null, fn (Builder $q, $v) => $q->where('is_active', $v))
                     ->when($this->filters['program_id'] ?? null, function (Builder $q, $v) {
-                        $q->whereHas('homeroomTeachers.classes', fn (Builder $q) => $q->where('program_id', $v));
+                        $q->whereHas('user.homeroomTeachers.classes', fn (Builder $q) => $q->where('program_id', $v));
                     })
             )
             ->columns([
@@ -90,7 +102,7 @@ class ReportTutors extends Page implements HasTable
             ])
             ->headerActions([
                 Action::make('exportCsv')
-                    ->label('Ekspor CSV')
+                    ->label('Ekspor Excel')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(fn () => $this->exportCsv()),
             ]);
@@ -101,11 +113,11 @@ class ReportTutors extends Page implements HasTable
         $rows = Tutor::query()
             ->when($this->filters['status'] ?? null, fn (Builder $q, $v) => $q->where('is_active', $v))
             ->when($this->filters['program_id'] ?? null, function (Builder $q, $v) {
-                $q->whereHas('homeroomTeachers.classes', fn (Builder $q) => $q->where('program_id', $v));
+                $q->whereHas('user.homeroomTeachers.classes', fn (Builder $q) => $q->where('program_id', $v));
             })
             ->get();
 
-        return $this->streamCsv('tutors.csv', [
+        return app(ExcelService::class)->exportReport('tutors.xlsx', [
             'NIP', 'Nama', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir',
             'Alamat', 'Telepon', 'Email', 'Status',
         ], $rows, fn ($row) => [
@@ -119,17 +131,5 @@ class ReportTutors extends Page implements HasTable
             $row->email,
             $row->is_active ? 'Aktif' : 'Nonaktif',
         ]);
-    }
-
-    protected function streamCsv(string $filename, array $headers, iterable $rows, callable $mapper): StreamedResponse
-    {
-        return response()->streamDownload(function () use ($headers, $rows, $mapper): void {
-            $handle = fopen('php://output', 'wb');
-            fputcsv($handle, $headers);
-            foreach ($rows as $row) {
-                fputcsv($handle, $mapper($row));
-            }
-            fclose($handle);
-        }, $filename);
     }
 }

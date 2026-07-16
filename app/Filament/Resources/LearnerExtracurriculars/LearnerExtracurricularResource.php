@@ -17,6 +17,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
@@ -111,7 +112,18 @@ class LearnerExtracurricularResource extends Resource
             TextColumn::make('created_at')->label('Dibuat')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             TextColumn::make('updated_at')->label('Diperbarui')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
         ])->filters([
-            //
+            SelectFilter::make('academic_year_id')
+                ->label('Tahun Ajaran')
+                ->relationship('academicYear', 'name', fn ($query) => $query->where('is_archived', false))
+                ->placeholder('Semua Tahun Ajaran'),
+            SelectFilter::make('semester_id')
+                ->label('Semester')
+                ->relationship('semester', 'name', fn ($query) => $query->whereHas('academicYear', fn ($q) => $q->where('is_archived', false)))
+                ->placeholder('Semua Semester'),
+            SelectFilter::make('extracurricular_id')
+                ->label('Ekstrakurikuler')
+                ->relationship('extracurricular', 'name')
+                ->placeholder('Semua Ekstrakurikuler'),
         ])
             ->recordActions([
                 EditAction::make(),

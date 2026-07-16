@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\Tutors\TutorResource;
 use App\Models\ImportHistory;
+use App\Services\ExcelService;
 use App\Services\ImportService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -15,6 +16,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ImportTutor extends Page implements HasTable
@@ -60,8 +62,8 @@ class ImportTutor extends Page implements HasTable
         return $schema
             ->components([
                 FileUpload::make('file')
-                    ->label('File CSV')
-                    ->acceptedFileTypes(['text/csv', 'text/plain', 'application/vnd.ms-excel'])
+                    ->label('File Excel (.xlsx)')
+                    ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
                     ->maxSize(2048)
                     ->storeFiles(false)
                     ->required(),
@@ -79,19 +81,20 @@ class ImportTutor extends Page implements HasTable
             return;
         }
 
-        $lines = file($file->getRealPath());
+        $spreadsheet = IOFactory::load($file->getRealPath());
+        $worksheet = $spreadsheet->getActiveSheet();
+        $rows = $worksheet->toArray();
 
-        if ($lines === false || empty($lines)) {
-            $this->addError('data.file', 'File CSV kosong.');
+        if (empty($rows)) {
+            $this->addError('data.file', 'File Excel kosong.');
 
             return;
         }
 
-        $firstLine = trim(array_shift($lines));
-        $headers = str_getcsv($firstLine);
-        $headerCount = count($headers);
-        $required = ['nip', 'name', 'email'];
+        $headers = array_map('strval', array_map('trim', $rows[0]));
+        array_shift($rows);
 
+        $required = ['nip', 'name', 'email'];
         $missing = array_diff($required, $headers);
         if (! empty($missing)) {
             $this->addError('data.file', 'Kolom wajib tidak ditemukan: '.implode(', ', $missing));
@@ -99,33 +102,17 @@ class ImportTutor extends Page implements HasTable
             return;
         }
 
+        $headerCount = count($headers);
         $records = [];
 
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '') {
-                continue;
+        foreach ($rows as $row) {
+            if (count($row) < $headerCount) {
+                $row = array_pad($row, $headerCount, null);
             }
-
-            $parsed = false;
-
-            foreach ([',', ';'] as $delimiter) {
-                $row = str_getcsv($line, $delimiter);
-
-                if (count($row) === $headerCount) {
-                    $records[] = array_combine($headers, $row);
-                    $parsed = true;
-                    break;
-                }
-            }
-
-            if (! $parsed && $line !== '' && $line[0] === '"' && $line[-1] === '"') {
-                $inner = str_replace('""', '"', substr($line, 1, -1));
-                $row = str_getcsv($inner);
-
-                if (count($row) === $headerCount) {
-                    $records[] = array_combine($headers, $row);
-                }
+            $record = array_combine($headers, array_slice($row, 0, $headerCount));
+            $record = array_map(fn ($v) => $v !== null ? trim((string) $v) : '', $record);
+            if (! empty($record['nip']) || ! empty($record['name'])) {
+                $records[] = $record;
             }
         }
 
@@ -242,24 +229,14 @@ class ImportTutor extends Page implements HasTable
 
     public function downloadTemplate(): StreamedResponse
     {
-        $headers = ['nip', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'phone', 'email', 'is_active', 'password'];
-        $sample = ['T001', 'Budi Santoso', 'L', 'Jakarta', '1990-01-15', 'Jl. Merdeka No.1', '081234567890', 'budi@example.com', '1', 'password123'];
-
-        $callback = function () use ($headers, $sample): void {
-            $handle = fopen('php://output', 'wb');
-            fputcsv($handle, $headers);
-            fputcsv($handle, $sample);
-            fclose($handle);
-        };
-
-        return response()->streamDownload($callback, 'format-import-tutor.csv', ['Content-Type' => 'text/csv']);
+        return app(ExcelService::class)->downloadTutorTemplate();
     }
 
     protected function getHeaderActions(): array
     {
         return [
             Action::make('downloadTemplate')
-                ->label('Unduh Format CSV')
+                ->label('Unduh Format Excel')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action('downloadTemplate')
                 ->color('gray'),

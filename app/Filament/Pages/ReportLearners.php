@@ -2,9 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\AcademicYear;
 use App\Models\Classes;
 use App\Models\Learner;
 use App\Models\Program;
+use App\Models\Semester;
+use App\Services\ExcelService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -48,6 +51,13 @@ class ReportLearners extends Page implements HasTable
         $this->form->fill();
     }
 
+    public function updated($propertyName): void
+    {
+        if (str_starts_with($propertyName, 'filters.')) {
+            $this->resetTable();
+        }
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema
@@ -57,7 +67,10 @@ class ReportLearners extends Page implements HasTable
                     ->options(Program::pluck('name', 'id'))
                     ->placeholder('Semua Program')
                     ->reactive()
-                    ->afterStateUpdated(fn (callable $set) => $set('class_id', null)),
+                    ->afterStateUpdated(function (callable $set) {
+                        $set('class_id', null);
+                        $this->resetTable();
+                    }),
                 Select::make('status')
                     ->label('Status')
                     ->options([
@@ -65,14 +78,36 @@ class ReportLearners extends Page implements HasTable
                         'alumni' => 'Alumni',
                         'dropped' => 'Keluar',
                     ])
-                    ->placeholder('Semua Status'),
+                    ->placeholder('Semua Status')
+                    ->reactive()
+                    ->afterStateUpdated(fn () => $this->resetTable()),
+                Select::make('academic_year_id')
+                    ->label('Tahun Ajaran')
+                    ->options(AcademicYear::where('is_archived', false)->where('is_active', true)->pluck('name', 'id'))
+                    ->placeholder('Semua')
+                    ->reactive()
+                    ->afterStateUpdated(function (callable $set) {
+                        $set('semester_id', null);
+                        $this->resetTable();
+                    }),
+                Select::make('semester_id')
+                    ->label('Semester')
+                    ->reactive()
+                    ->options(fn (callable $get) => Semester::when(
+                        $get('academic_year_id'),
+                        fn (Builder $q, $v) => $q->where('academic_year_id', $v)
+                    )->whereHas('academicYear', fn ($q) => $q->where('is_archived', false))->pluck('name', 'id'))
+                    ->placeholder('Semua')
+                    ->afterStateUpdated(fn () => $this->resetTable()),
                 Select::make('class_id')
                     ->label('Kelas')
+                    ->reactive()
                     ->options(fn (callable $get) => Classes::when(
                         $get('program_id'),
                         fn (Builder $q, $v) => $q->where('program_id', $v)
                     )->pluck('name', 'id'))
-                    ->placeholder('Semua Kelas'),
+                    ->placeholder('Semua Kelas')
+                    ->afterStateUpdated(fn () => $this->resetTable()),
             ])
             ->statePath('filters');
     }
@@ -84,6 +119,12 @@ class ReportLearners extends Page implements HasTable
                 Learner::query()
                     ->when($this->filters['status'] ?? null, fn (Builder $q, $v) => $q->where('status', $v))
                     ->when($this->filters['program_id'] ?? null, fn (Builder $q, $v) => $q->where('program_id', $v))
+                    ->when($this->filters['academic_year_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
+                        'classLearners', fn (Builder $q) => $q->where('academic_year_id', $v)
+                    ))
+                    ->when($this->filters['semester_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
+                        'classLearners', fn (Builder $q) => $q->where('semester_id', $v)
+                    ))
                     ->when($this->filters['class_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
                         'classLearners', fn (Builder $q) => $q->where('class_id', $v)
                     ))
@@ -107,7 +148,7 @@ class ReportLearners extends Page implements HasTable
             ])
             ->headerActions([
                 Action::make('exportCsv')
-                    ->label('Ekspor CSV')
+                    ->label('Ekspor Excel')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(fn () => $this->exportCsv()),
             ]);
@@ -119,12 +160,18 @@ class ReportLearners extends Page implements HasTable
             ->with('program')
             ->when($this->filters['status'] ?? null, fn (Builder $q, $v) => $q->where('status', $v))
             ->when($this->filters['program_id'] ?? null, fn (Builder $q, $v) => $q->where('program_id', $v))
+            ->when($this->filters['academic_year_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
+                'classLearners', fn (Builder $q) => $q->where('academic_year_id', $v)
+            ))
+            ->when($this->filters['semester_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
+                'classLearners', fn (Builder $q) => $q->where('semester_id', $v)
+            ))
             ->when($this->filters['class_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
                 'classLearners', fn (Builder $q) => $q->where('class_id', $v)
             ))
             ->get();
 
-        return $this->streamCsv('learners.csv', [
+        return app(ExcelService::class)->exportReport('learners.xlsx', [
             'NIS', 'NISN', 'Nama', 'Program', 'Jenis Kelamin',
             'Tempat Lahir', 'Tanggal Lahir', 'Alamat', 'Status',
         ], $rows, fn ($row) => [
@@ -138,17 +185,5 @@ class ReportLearners extends Page implements HasTable
             $row->address,
             $row->status,
         ]);
-    }
-
-    protected function streamCsv(string $filename, array $headers, iterable $rows, callable $mapper): StreamedResponse
-    {
-        return response()->streamDownload(function () use ($headers, $rows, $mapper): void {
-            $handle = fopen('php://output', 'wb');
-            fputcsv($handle, $headers);
-            foreach ($rows as $row) {
-                fputcsv($handle, $mapper($row));
-            }
-            fclose($handle);
-        }, $filename);
     }
 }

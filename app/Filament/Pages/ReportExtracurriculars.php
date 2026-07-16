@@ -6,6 +6,7 @@ use App\Models\AcademicYear;
 use App\Models\Extracurricular;
 use App\Models\LearnerExtracurricular;
 use App\Models\Semester;
+use App\Services\ExcelService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -49,6 +50,13 @@ class ReportExtracurriculars extends Page implements HasTable
         $this->form->fill();
     }
 
+    public function updated($propertyName): void
+    {
+        if (str_starts_with($propertyName, 'filters.')) {
+            $this->resetTable();
+        }
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema
@@ -58,18 +66,25 @@ class ReportExtracurriculars extends Page implements HasTable
                     ->options(AcademicYear::where('is_archived', false)->where('is_active', true)->pluck('name', 'id'))
                     ->placeholder('Semua')
                     ->reactive()
-                    ->afterStateUpdated(fn (callable $set) => $set('semester_id', null)),
+                    ->afterStateUpdated(function (callable $set) {
+                        $set('semester_id', null);
+                        $this->resetTable();
+                    }),
                 Select::make('semester_id')
                     ->label('Semester')
+                    ->reactive()
                     ->options(fn (callable $get) => Semester::when(
                         $get('academic_year_id'),
                         fn (Builder $q, $v) => $q->where('academic_year_id', $v)
                     )->whereHas('academicYear', fn ($q) => $q->where('is_archived', false))->pluck('name', 'id'))
-                    ->placeholder('Semua'),
+                    ->placeholder('Semua')
+                    ->afterStateUpdated(fn () => $this->resetTable()),
                 Select::make('extracurricular_id')
                     ->label('Ekstrakurikuler')
-                    ->options(Extracurricular::pluck('name', 'id'))
-                    ->placeholder('Semua'),
+                    ->options(Extracurricular::orderBy('name')->pluck('name', 'id'))
+                    ->placeholder('Semua')
+                    ->reactive()
+                    ->afterStateUpdated(fn () => $this->resetTable()),
             ])
             ->statePath('filters');
     }
@@ -93,7 +108,7 @@ class ReportExtracurriculars extends Page implements HasTable
             ])
             ->headerActions([
                 Action::make('exportCsv')
-                    ->label('Ekspor CSV')
+                    ->label('Ekspor Excel')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(fn () => $this->exportCsv()),
             ]);
@@ -108,7 +123,7 @@ class ReportExtracurriculars extends Page implements HasTable
             ->when($this->filters['extracurricular_id'] ?? null, fn (Builder $q, $v) => $q->where('extracurricular_id', $v))
             ->get();
 
-        return $this->streamCsv('extracurriculars.csv', [
+        return app(ExcelService::class)->exportReport('extracurriculars.xlsx', [
             'Nama Warga Belajar', 'Ekstrakurikuler', 'Tahun Ajaran', 'Semester', 'Catatan',
         ], $rows, fn ($row) => [
             $row->learner?->name,
@@ -117,17 +132,5 @@ class ReportExtracurriculars extends Page implements HasTable
             $row->semester?->name,
             $row->notes,
         ]);
-    }
-
-    protected function streamCsv(string $filename, array $headers, iterable $rows, callable $mapper): StreamedResponse
-    {
-        return response()->streamDownload(function () use ($headers, $rows, $mapper): void {
-            $handle = fopen('php://output', 'wb');
-            fputcsv($handle, $headers);
-            foreach ($rows as $row) {
-                fputcsv($handle, $mapper($row));
-            }
-            fclose($handle);
-        }, $filename);
     }
 }

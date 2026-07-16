@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\Learners\LearnerResource;
 use App\Models\ImportHistory;
+use App\Services\ExcelService;
 use App\Services\ImportService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -15,6 +16,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ImportLearner extends Page implements HasTable
@@ -58,8 +60,8 @@ class ImportLearner extends Page implements HasTable
         return $schema
             ->components([
                 FileUpload::make('file')
-                    ->label('File CSV')
-                    ->acceptedFileTypes(['text/csv', 'text/plain', 'application/vnd.ms-excel'])
+                    ->label('File Excel (.xlsx)')
+                    ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
                     ->maxSize(2048)
                     ->storeFiles(false)
                     ->required(),
@@ -77,18 +79,19 @@ class ImportLearner extends Page implements HasTable
             return;
         }
 
-        $path = $file->getRealPath();
-        $lines = file($path);
+        $spreadsheet = IOFactory::load($file->getRealPath());
+        $worksheet = $spreadsheet->getActiveSheet();
+        $rows = $worksheet->toArray();
 
-        if ($lines === false || empty($lines)) {
-            $this->addError('data.file', 'File CSV kosong.');
+        if (empty($rows)) {
+            $this->addError('data.file', 'File Excel kosong.');
 
             return;
         }
 
-        $firstLine = trim(array_shift($lines));
-        $headers = str_getcsv($firstLine);
-        $headerCount = count($headers);
+        $headers = array_map('strval', array_map('trim', $rows[0]));
+        array_shift($rows);
+
         $required = ['nis', 'nisn', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'status', 'class_name', 'religion', 'child_order', 'phone', 'admission_date', 'admission_class', 'admission_status', 'father_name', 'father_job', 'mother_name', 'mother_job', 'guardian_name', 'guardian_job', 'report_number'];
 
         $missing = array_diff($required, $headers);
@@ -98,33 +101,17 @@ class ImportLearner extends Page implements HasTable
             return;
         }
 
+        $headerCount = count($headers);
         $records = [];
 
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '') {
-                continue;
+        foreach ($rows as $row) {
+            if (count($row) < $headerCount) {
+                $row = array_pad($row, $headerCount, null);
             }
-
-            $parsed = false;
-
-            foreach ([',', ';'] as $delimiter) {
-                $row = str_getcsv($line, $delimiter);
-
-                if (count($row) === $headerCount) {
-                    $records[] = array_combine($headers, $row);
-                    $parsed = true;
-                    break;
-                }
-            }
-
-            if (! $parsed && $line !== '' && $line[0] === '"' && $line[-1] === '"') {
-                $inner = str_replace('""', '"', substr($line, 1, -1));
-                $row = str_getcsv($inner);
-
-                if (count($row) === $headerCount) {
-                    $records[] = array_combine($headers, $row);
-                }
+            $record = array_combine($headers, array_slice($row, 0, $headerCount));
+            $record = array_map(fn ($v) => $v !== null ? trim((string) $v) : '', $record);
+            if (! empty($record['nis']) || ! empty($record['name'])) {
+                $records[] = $record;
             }
         }
 
@@ -253,24 +240,14 @@ class ImportLearner extends Page implements HasTable
 
     public function downloadTemplate(): StreamedResponse
     {
-        $headers = ['nis', 'nisn', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'status', 'class_name', 'religion', 'child_order', 'phone', 'admission_date', 'admission_class', 'admission_status', 'father_name', 'father_job', 'mother_name', 'mother_job', 'guardian_name', 'guardian_job', 'report_number'];
-        $sample = ['12345', '1234567890', 'Siti Aisyah', 'P', 'Jakarta', '2010-05-10', 'Jl. Merdeka No.1', 'aktif', 'Kelas X.1', 'Islam', '1', '08123456789', '2024-07-15', 'Paket A', 'baru', 'Ahmad', 'Petani', 'Siti', 'Ibu Rumah Tangga', '', '', ''];
-
-        $callback = function () use ($headers, $sample): void {
-            $handle = fopen('php://output', 'wb');
-            fputcsv($handle, $headers);
-            fputcsv($handle, $sample);
-            fclose($handle);
-        };
-
-        return response()->streamDownload($callback, 'format-import-peserta.csv', ['Content-Type' => 'text/csv']);
+        return app(ExcelService::class)->downloadLearnerTemplate();
     }
 
     protected function getHeaderActions(): array
     {
         return [
             Action::make('downloadTemplate')
-                ->label('Unduh Format CSV')
+                ->label('Unduh Format Excel')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action('downloadTemplate')
                 ->color('gray'),

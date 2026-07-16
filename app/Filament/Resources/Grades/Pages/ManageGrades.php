@@ -76,6 +76,11 @@ class ManageGrades extends ManageRecords
             $query->whereIn('learner_id', $classLearnerIds);
         }
 
+        // Pastikan filter dari table (seperti semester_id) tetap diproses
+        // Dalam Filament, filter tabel biasanya otomatis diterapkan pada $query.
+        // Jika tidak, Anda mungkin perlu menangani filter state secara eksplisit
+        // dari $this->tableFilters
+
         return $query;
     }
 

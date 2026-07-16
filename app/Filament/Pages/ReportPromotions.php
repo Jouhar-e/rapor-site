@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\AcademicYear;
 use App\Models\PromotionMapping;
+use App\Services\ExcelService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -47,6 +48,13 @@ class ReportPromotions extends Page implements HasTable
         $this->form->fill();
     }
 
+    public function updated($propertyName): void
+    {
+        if (str_starts_with($propertyName, 'filters.')) {
+            $this->resetTable();
+        }
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema
@@ -54,7 +62,9 @@ class ReportPromotions extends Page implements HasTable
                 Select::make('academic_year_id')
                     ->label('Tahun Ajaran')
                     ->options(AcademicYear::where('is_archived', false)->where('is_active', true)->pluck('name', 'id'))
-                    ->placeholder('Semua'),
+                    ->placeholder('Semua')
+                    ->reactive()
+                    ->afterStateUpdated(fn () => $this->resetTable()),
             ])
             ->statePath('filters');
     }
@@ -79,7 +89,7 @@ class ReportPromotions extends Page implements HasTable
             ])
             ->headerActions([
                 Action::make('exportCsv')
-                    ->label('Ekspor CSV')
+                    ->label('Ekspor Excel')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(fn () => $this->exportCsv()),
             ]);
@@ -95,7 +105,7 @@ class ReportPromotions extends Page implements HasTable
             )
             ->get();
 
-        return $this->streamCsv('promotions.csv', [
+        return app(ExcelService::class)->exportReport('promotions.xlsx', [
             'Kelas Asal', 'Kelas Tujuan', 'Tahun Ajaran', 'Tanggal Naik', 'Catatan',
         ], $rows, fn ($row) => [
             $row->sourceClass?->name,
@@ -104,17 +114,5 @@ class ReportPromotions extends Page implements HasTable
             $row->promoted_at?->format('Y-m-d H:i:s'),
             $row->notes,
         ]);
-    }
-
-    protected function streamCsv(string $filename, array $headers, iterable $rows, callable $mapper): StreamedResponse
-    {
-        return response()->streamDownload(function () use ($headers, $rows, $mapper): void {
-            $handle = fopen('php://output', 'wb');
-            fputcsv($handle, $headers);
-            foreach ($rows as $row) {
-                fputcsv($handle, $mapper($row));
-            }
-            fclose($handle);
-        }, $filename);
     }
 }

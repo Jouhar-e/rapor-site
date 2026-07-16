@@ -26,7 +26,8 @@ class ManageLearners extends ManageRecords
                 ->using(function (array $data, string $model): Model {
                     $classId = $data['class_id'];
                     $academicYearId = $data['academic_year_id'];
-                    unset($data['class_id'], $data['academic_year_id']);
+                    $semesterId = $data['semester_id'] ?? null;
+                    unset($data['class_id'], $data['academic_year_id'], $data['semester_id']);
 
                     $class = Classes::find($classId);
                     $data['program_id'] = $class?->program_id;
@@ -37,6 +38,7 @@ class ManageLearners extends ManageRecords
                         'learner_id' => $learner->id,
                         'class_id' => $classId,
                         'academic_year_id' => $academicYearId,
+                        'semester_id' => $semesterId,
                     ]);
 
                     return $learner;

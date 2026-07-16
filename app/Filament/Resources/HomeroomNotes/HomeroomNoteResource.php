@@ -7,6 +7,7 @@ use App\Filament\Resources\HomeroomNotes\Pages\ManageHomeroomNotes;
 use App\Models\ClassLearner;
 use App\Models\HomeroomNote;
 use App\Models\HomeroomTeacher;
+use App\Models\Learner;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -17,6 +18,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
@@ -54,12 +56,13 @@ class HomeroomNoteResource extends Resource
             if ($classIds->isNotEmpty()) {
                 $learnerIds = ClassLearner::whereIn('class_id',
                     $classIds)->pluck('learner_id');
-                returnLearner::whereIn('id',
+
+                return Learner::whereIn('id',
                     $learnerIds)->pluck('name',
                         'id')->toArray();
 
             }if ($user->hasRole('admin')) {
-                returnLearner::pluck('name',
+                return Learner::pluck('name',
                     'id')->toArray();
 
             }
@@ -103,7 +106,14 @@ class HomeroomNoteResource extends Resource
             TextColumn::make('created_at')->label('Dibuat')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             TextColumn::make('updated_at')->label('Diperbarui')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
         ])->filters([
-            //
+            SelectFilter::make('academic_year_id')
+                ->label('Tahun Ajaran')
+                ->relationship('academicYear', 'name', fn ($query) => $query->where('is_archived', false))
+                ->placeholder('Semua Tahun Ajaran'),
+            SelectFilter::make('semester_id')
+                ->label('Semester')
+                ->relationship('semester', 'name', fn ($query) => $query->whereHas('academicYear', fn ($q) => $q->where('is_archived', false)))
+                ->placeholder('Semua Semester'),
         ])
             ->recordActions([
                 EditAction::make(),

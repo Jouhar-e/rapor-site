@@ -217,10 +217,11 @@ class ManageAttendancePivot extends Page implements HasTable
     public function updatedAcademicYearId(): void
     {
         $this->semester_id = null;
+        $this->resetTable();
     }
 
     public function updatedSemesterId(): void
     {
-        //
+        $this->resetTable();
     }
 }

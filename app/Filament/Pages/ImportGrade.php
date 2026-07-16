@@ -86,7 +86,6 @@ class ImportGrade extends Page implements HasTable
                     ->label('File Excel (.xlsx)')
                     ->acceptedFileTypes([
                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                        'text/csv', 'text/plain', 'application/vnd.ms-excel',
                     ])
                     ->maxSize(2048)
                     ->storeFiles(false)
@@ -106,68 +105,7 @@ class ImportGrade extends Page implements HasTable
             return;
         }
 
-        $extension = strtolower($file->getClientOriginalExtension());
-
-        if (in_array($extension, ['xlsx', 'xls'])) {
-            $this->previewXlsx($file, $state);
-        } else {
-            $this->previewCsv($file, $state);
-        }
-    }
-
-    protected function previewCsv($file, array $state): void
-    {
-        $lines = file($file->getRealPath());
-
-        if ($lines === false || empty($lines)) {
-            $this->addError('data.file', 'File CSV kosong.');
-
-            return;
-        }
-
-        $firstLine = trim(array_shift($lines));
-        $headers = str_getcsv($firstLine);
-        $headerCount = count($headers);
-        $required = ['nis', 'name'];
-
-        $missing = array_diff($required, $headers);
-        if (! empty($missing)) {
-            $this->addError('data.file', 'Kolom wajib tidak ditemukan: '.implode(', ', $missing));
-
-            return;
-        }
-
-        $records = [];
-
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '') {
-                continue;
-            }
-
-            $parsed = false;
-
-            foreach ([',', ';'] as $delimiter) {
-                $row = str_getcsv($line, $delimiter);
-
-                if (count($row) === $headerCount) {
-                    $records[] = array_combine($headers, $row);
-                    $parsed = true;
-                    break;
-                }
-            }
-
-            if (! $parsed && $line !== '' && $line[0] === '"' && $line[-1] === '"') {
-                $inner = str_replace('""', '"', substr($line, 1, -1));
-                $row = str_getcsv($inner);
-
-                if (count($row) === $headerCount) {
-                    $records[] = array_combine($headers, $row);
-                }
-            }
-        }
-
-        $this->finalizePreview($records, $headers, $state);
+        $this->previewXlsx($file, $state);
     }
 
     protected function previewXlsx($file, array $state): void
