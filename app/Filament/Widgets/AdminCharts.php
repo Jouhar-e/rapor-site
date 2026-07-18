@@ -10,12 +10,15 @@ class AdminCharts extends ChartWidget
 {
     protected ?string $heading = 'Distribusi Program';
 
+    // Tambahkan baris ini agar grafik tetap ringkas dan tidak terlalu tinggi
+    protected ?string $maxHeight = '275px';
+
     public function getColumnSpan(): int|string|array
     {
         return [
             'default' => 'full',
-            'md' => 1,
-            'xl' => 4,
+            'md' => 6,
+            'xl' => 6, // Seimbangkan menjadi 6 kolom (50% layar)
         ];
     }
 
@@ -40,6 +43,21 @@ class AdminCharts extends ChartWidget
     protected function getType(): string
     {
         return 'bar';
+    }
+
+    protected function getOptions(): array
+    {
+        return [
+            'plugins' => [
+                'legend' => ['display' => false],
+            ],
+            'scales' => [
+                'y' => [
+                    'beginAtZero' => true,
+                    'ticks' => ['stepSize' => 1],
+                ],
+            ],
+        ];
     }
 
     public static function canView(): bool

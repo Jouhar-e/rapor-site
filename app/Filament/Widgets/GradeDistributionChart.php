@@ -10,12 +10,15 @@ class GradeDistributionChart extends ChartWidget
 {
     protected ?string $heading = 'Distribusi Nilai';
 
+    // Tambahkan baris ini agar tingginya persis sama dengan grafik batang
+    protected ?string $maxHeight = '275px';
+
     public function getColumnSpan(): int|string|array
     {
         return [
             'default' => 'full',
-            'md' => 1,
-            'xl' => 4,
+            'md' => 6,
+            'xl' => 6, // Seimbangkan menjadi 6 kolom (50% layar)
         ];
     }
 
@@ -39,6 +42,21 @@ class GradeDistributionChart extends ChartWidget
     protected function getType(): string
     {
         return 'doughnut';
+    }
+
+    protected function getOptions(): array
+    {
+        return [
+            'plugins' => [
+                'legend' => [
+                    'display' => true,
+                    'position' => 'bottom',
+                    'labels' => ['usePointStyle' => true],
+                ],
+            ],
+            'cutout' => '65%',
+            'maintainAspectRatio' => false, // Pastikan lingkaran tidak membesar sendiri
+        ];
     }
 
     public static function canView(): bool

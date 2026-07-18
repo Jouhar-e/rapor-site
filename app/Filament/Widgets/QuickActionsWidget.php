@@ -10,7 +10,11 @@ class QuickActionsWidget extends Widget
 
     public function getColumnSpan(): int|string|array
     {
-        return 'full';
+        return [
+            'default' => 'full',
+            'md' => 12,
+            'xl' => 8,
+        ];
     }
 
     protected function getViewData(): array

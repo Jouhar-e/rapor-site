@@ -1,70 +1,43 @@
-<x-filament-widgets::widget class="fi-stats-cards-widget">
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+<x-filament-widgets::widget>
+    {{-- Container Grid: Otomatis membagi menjadi 4 kolom di layar besar, dan susun ke bawah di HP --}}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+
         @foreach ($cards as $card)
-            @php
-                $t = $theme[$card['color']];
-            @endphp
-            <div
-                class="flex h-[140px] flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
-            >
-                <div class="flex items-center gap-2">
-                    <div
-                        class="flex h-7 w-7 items-center justify-center rounded-lg"
-                        style="background-color: {{ $t['bg'] }}; color: {{ $t['icon'] }};"
-                    >
-                        <x-filament::icon :icon="$card['icon']" class="h-4 w-4" />
-                    </div>
-                    <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                        {{ $card['label'] }}
-                    </span>
-                </div>
+        @php
+        $t = $theme[$card['color']];
+        @endphp
 
-                <div class="flex flex-1 items-center justify-center">
-                    <span class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                        {{ $card['value'] }}
-                    </span>
-                </div>
+        {{-- Card Box --}}
+        <div style="display: flex; align-items: center; justify-content: space-between; background-color: #ffffff; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb;">
 
-                <div class="flex items-center justify-between">
-                    <span
-                        class="text-xs font-medium"
-                        style="color: {{ $t['text'] }}"
-                    >
-                        {{ $card['trend'] }}
-                    </span>
-                    <svg
-                        viewBox="0 0 80 28"
-                        class="h-7 w-20"
-                        style="color: {{ $t['line'] }}"
-                        aria-hidden="true"
-                    >
-                        <defs>
-                            <linearGradient
-                                id="sg-{{ $loop->index }}"
-                                x1="0"
-                                y1="0"
-                                x2="0"
-                                y2="1"
-                            >
-                                <stop offset="0%" stop-color="currentColor" stop-opacity="0.2" />
-                                <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
-                            </linearGradient>
-                        </defs>
-                        <path
-                            d="{{ $card['sparklineFill'] }}"
-                            fill="url(#sg-{{ $loop->index }})"
-                        />
-                        <path
-                            d="{{ $card['sparkline'] }}"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
-                </div>
+            {{-- Bagian Kiri: Informasi Teks --}}
+            <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+
+                {{-- Label (Misal: Total Warga Belajar) --}}
+                <span style="font-size: 0.875rem; font-weight: 500; color: #6b7280;">
+                    {{ $card['label'] }}
+                </span>
+
+                {{-- Value Angka Besar --}}
+                <span style="font-size: 1.875rem; font-weight: 700; color: #111827; line-height: 1.2;">
+                    {{ $card['value'] }}
+                </span>
+
+                {{-- Trend (Misal: +2 bulan ini) --}}
+                <span style="font-size: 0.875rem; font-weight: 500; color: {{ $t['text'] ?? $t['icon'] }};">
+                    {{ $card['trend'] }}
+                </span>
+
             </div>
+
+            {{-- Bagian Kanan: Ikon dalam Kotak --}}
+            <div style="display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; flex-shrink: 0; border-radius: 1rem; background-color: {{ $t['bg'] }}; color: {{ $t['icon'] }};">
+                <x-filament::icon :icon="$card['icon']" style="width: 28px; height: 28px;" />
+            </div>
+
+        </div>
+
         @endforeach
+
     </div>
 </x-filament-widgets::widget>

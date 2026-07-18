@@ -14,10 +14,12 @@ use App\Models\HomeroomNote;
 use App\Models\HomeroomTeacher;
 use App\Models\Learner;
 use App\Models\LearnerExtracurricular;
+use App\Models\Phase;
 use App\Models\Program;
 use App\Models\PromotionMapping;
 use App\Models\Semester;
 use App\Models\Subject;
+use App\Models\SubjectGroup;
 use App\Models\Tutor;
 use App\Policies\AcademicYearPolicy;
 use App\Policies\AttendancePolicy;
@@ -31,9 +33,11 @@ use App\Policies\HomeroomNotePolicy;
 use App\Policies\HomeroomTeacherPolicy;
 use App\Policies\LearnerExtracurricularPolicy;
 use App\Policies\LearnerPolicy;
+use App\Policies\PhasePolicy;
 use App\Policies\ProgramPolicy;
 use App\Policies\PromotionMappingPolicy;
 use App\Policies\SemesterPolicy;
+use App\Policies\SubjectGroupPolicy;
 use App\Policies\SubjectPolicy;
 use App\Policies\TutorPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -55,7 +59,9 @@ class AuthServiceProvider extends ServiceProvider
         Attendance::class => AttendancePolicy::class,
         LearnerExtracurricular::class => LearnerExtracurricularPolicy::class,
         HomeroomNote::class => HomeroomNotePolicy::class,
+        Phase::class => PhasePolicy::class,
         PromotionMapping::class => PromotionMappingPolicy::class,
+        SubjectGroup::class => SubjectGroupPolicy::class,
         AuditLog::class => AuditLogPolicy::class,
         BackupHistory::class => BackupHistoryPolicy::class,
     ];
