@@ -19,16 +19,14 @@ use Filament\Schemas\Components\View;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 class PromotionWizard extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-up-circle';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Akademik';
+    protected static string|UnitEnum|null $navigationGroup = 'Master Data';
 
     protected static ?int $navigationSort = 8;
 
@@ -161,16 +159,14 @@ class PromotionWizard extends Page
                             View::make('filament.components.promotion-confirmation'),
                         ]),
                 ])
-                    ->submitAction(new HtmlString(Blade::render(<<<'BLADE'
-                        <x-filament::button
-                            type="submit"
-                            size="lg"
-                            color="success"
-                            icon="heroicon-o-check-circle"
-                        >
-                            Konfirmasi & Eksekusi
-                        </x-filament::button>
-                    BLADE)))
+                    ->submitAction(
+                        Action::make('save')
+                            ->label('Konfirmasi & Eksekusi')
+                            ->color('success')
+                            ->size('lg')
+                            ->icon('heroicon-o-check-circle')
+                            ->action('save'),
+                    )
                     ->nextAction(
                         fn (Action $action): Action => $action->label('Lanjut'),
                     )

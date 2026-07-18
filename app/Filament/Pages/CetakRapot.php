@@ -128,12 +128,15 @@ class CetakRapot extends Page implements HasTable
 
     public function table(Table $table): Table
     {
+        $selectedSemester = Semester::find($this->filters['semester_id'] ?? null);
+        $semesterAcademicYearId = $selectedSemester?->academic_year_id;
+
         return $table
             ->query(
                 ClassLearner::query()
                     ->with('learner')
                     ->when(
-                        $this->filters['academic_year_id'] ?? null,
+                        $this->filters['academic_year_id'] ?? $semesterAcademicYearId ?? null,
                         fn (Builder $q, $v) => $q->where('academic_year_id', $v)
                     )
                     ->when(
@@ -173,8 +176,12 @@ class CetakRapot extends Page implements HasTable
         $sections = $this->filters['sections'] ?? ['cover', 'identitas', 'biodata', 'nilai'];
 
         $academicYearId = $this->filters['academic_year_id'] ?? $record->academic_year_id;
-        $semesterId = $this->filters['semester_id'] ?? $record->semester_id;
-        $printDate = $this->filters['print_date'] ?? now()->format('Y-m-d');
+        $semesterId = $this->filters['semester_id'] ?? null;
+
+        // If semester selected but no academic year, resolve from semester
+        if ($semesterId && ! $academicYearId) {
+            $academicYearId = Semester::find($semesterId)?->academic_year_id;
+        }
 
         if (! $academicYearId || ! $semesterId) {
             Notification::make()
@@ -191,7 +198,7 @@ class CetakRapot extends Page implements HasTable
             $academicYearId,
             $semesterId,
             $sections,
-            $printDate,
+            $printDate ?? now()->format('Y-m-d'),
         );
     }
 
@@ -202,6 +209,11 @@ class CetakRapot extends Page implements HasTable
         $academicYearId = $this->filters['academic_year_id'] ?? null;
         $semesterId = $this->filters['semester_id'] ?? null;
         $printDate = $this->filters['print_date'] ?? now()->format('Y-m-d');
+
+        // If semester selected but no academic year, resolve from semester
+        if ($semesterId && ! $academicYearId) {
+            $academicYearId = Semester::find($semesterId)?->academic_year_id;
+        }
 
         if (! $academicYearId || ! $semesterId) {
             Notification::make()

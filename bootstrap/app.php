@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(AuditLogMiddleware::class);
+        $middleware->trustProxies(at: '*');
+        $middleware->validateCsrfTokens(except: [
+            'livewire-*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -64,7 +64,7 @@ class ImportTutor extends Page implements HasTable
                 FileUpload::make('file')
                     ->label('File Excel (.xlsx)')
                     ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
-                    ->maxSize(2048)
+                    ->maxSize(10240)
                     ->storeFiles(false)
                     ->required(),
             ])

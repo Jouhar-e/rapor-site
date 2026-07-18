@@ -160,7 +160,8 @@ class ReportCardService
 
         $class = $classLearner?->classes;
         $phaseName = $class?->phase?->name ?? '—';
-        $programName = strtoupper($learner->program?->code ?? $class?->program?->code ?? '—');
+        $program = $learner->program ?? $class?->program;
+        $programName = strtoupper($program?->code ?? '—');
 
         $homeroomTeacher = HomeroomTeacher::where('class_id', $class?->id)
             ->where('academic_year_id', $academicYearId)
@@ -215,7 +216,7 @@ class ReportCardService
 
         return compact(
             'school', 'academicYear', 'semester', 'learner',
-            'class', 'phaseName', 'programName',
+            'class', 'phaseName', 'program', 'programName',
             'homeroomTeacher', 'homeroomTeacherNip', 'groupedGrades', 'attendance',
             'extracurriculars', 'homeroomNote', 'reportNumber',
             'printDate',

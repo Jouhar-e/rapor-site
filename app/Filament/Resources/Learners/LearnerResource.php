@@ -76,8 +76,7 @@ class LearnerResource extends Resource
                     })
                     ->required()
                     ->placeholder('Pilih Semester')
-                    ->live()
-                    ->afterStateUpdated(fn (callable $set) => $set('semester_id', null)),
+                    ->live(),
                 TextInput::make('nis')
                     ->label('NIS')
                     ->required()

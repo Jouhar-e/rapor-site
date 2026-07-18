@@ -87,7 +87,7 @@ class ImportGrade extends Page implements HasTable
                     ->acceptedFileTypes([
                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     ])
-                    ->maxSize(2048)
+                    ->maxSize(10240)
                     ->storeFiles(false)
                     ->required(),
             ])
