@@ -11,6 +11,7 @@ use BackedEnum;
 use Filament\Actions\Action as TableAction;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Notifications\Notification;
@@ -117,6 +118,10 @@ class CetakRapot extends Page implements HasTable
                     ->columns(2)
                     ->default(['cover', 'identitas', 'biodata', 'nilai'])
                     ->live(),
+                DatePicker::make('print_date')
+                    ->label('Tanggal Cetak')
+                    ->default(now()->format('Y-m-d'))
+                    ->required(),
             ])
             ->statePath('filters');
     }
@@ -169,6 +174,7 @@ class CetakRapot extends Page implements HasTable
 
         $academicYearId = $this->filters['academic_year_id'] ?? $record->academic_year_id;
         $semesterId = $this->filters['semester_id'] ?? $record->semester_id;
+        $printDate = $this->filters['print_date'] ?? now()->format('Y-m-d');
 
         if (! $academicYearId || ! $semesterId) {
             Notification::make()
@@ -185,6 +191,7 @@ class CetakRapot extends Page implements HasTable
             $academicYearId,
             $semesterId,
             $sections,
+            $printDate,
         );
     }
 
@@ -194,6 +201,7 @@ class CetakRapot extends Page implements HasTable
 
         $academicYearId = $this->filters['academic_year_id'] ?? null;
         $semesterId = $this->filters['semester_id'] ?? null;
+        $printDate = $this->filters['print_date'] ?? now()->format('Y-m-d');
 
         if (! $academicYearId || ! $semesterId) {
             Notification::make()
@@ -224,6 +232,7 @@ class CetakRapot extends Page implements HasTable
                 $academicYearId,
                 $semesterId,
                 $sections,
+                $printDate,
             );
         }
 
@@ -232,6 +241,7 @@ class CetakRapot extends Page implements HasTable
             $academicYearId,
             $semesterId,
             $sections,
+            $printDate,
         );
     }
 }

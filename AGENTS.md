@@ -62,7 +62,7 @@ Laravel 13 + Filament 5 admin panel untuk program PKBM (Paket A/B/C). ~22 Resour
   - `GradeService.php`, `AttendanceService.php`, `PromotionService.php` — logika domain
   - `DashboardService.php` — statistik/chart
   - `BackupService.php`, `AuditService.php`, `NotificationService.php` — utilitas
-  - `CompetencyService.php` — kompetensi
+
 - **Model** di `app/Models/` — Eloquent model, relasi, scope, accessor.
 - **Permissions**: Spatie Laravel Permission, role `admin` (semua) dan `tutor` (terbatas: CRUD grade/attendance/extracurricular/homeroom-note + import). Laporan hanya admin.
 
@@ -78,7 +78,7 @@ Programs (sort=1) → AcademicYears (2) → Semesters (3) → Tutors (4) → Lea
 ReportTutors (sort=1) → ReportLearners (2) → ReportGrades (3) → ReportAttendances (4) → ReportExtracurriculars (5) → ReportPromotions (6)
 
 ### Sistem
-Users (sort=0) → AuditLogs (1) → BackupHistories (2) → GradePredicates (3) → CompetencyTemplates (4) → ManageSchoolProfile (4) → ManageGradingSettings (5)
+Users (sort=0) → AuditLogs (1) → BackupHistories (2) → GradePredicates (3) → ManageSchoolProfile (4) → ManageGradingSettings (5)
 
 ## Gotcha Kritis
 

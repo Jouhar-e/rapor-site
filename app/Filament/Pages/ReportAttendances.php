@@ -3,14 +3,14 @@
 namespace App\Filament\Pages;
 
 use App\Models\AcademicYear;
-use App\Models\Attendance;
 use App\Models\Classes;
+use App\Models\ClassLearner;
+use App\Models\Learner;
 use App\Models\Semester;
 use App\Services\ExcelService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -25,7 +25,6 @@ use UnitEnum;
 
 class ReportAttendances extends Page implements HasTable
 {
-    use InteractsWithForms;
     use InteractsWithTable;
 
     protected static ?string $title = 'Laporan Presensi';
@@ -45,113 +44,135 @@ class ReportAttendances extends Page implements HasTable
         return auth()->user()->can('report.view');
     }
 
-    public ?array $filters = [];
+    public ?int $class_id = null;
+
+    public ?int $academic_year_id = null;
+
+    public ?int $semester_id = null;
 
     public function mount(): void
     {
-        $this->form->fill();
+        $activeYear = AcademicYear::where('is_active', true)->where('is_archived', false)->first();
+        $this->academic_year_id = $activeYear?->id;
+
+        $activeSemester = $activeYear
+            ? Semester::where('academic_year_id', $activeYear->id)->where('is_active', true)->first()
+            : null;
+        $this->semester_id = $activeSemester?->id;
     }
 
-    public function updated($propertyName): void
-    {
-        if (str_starts_with($propertyName, 'filters.')) {
-            $this->resetTable();
-        }
-    }
-
-    public function form(Schema $schema): Schema
+    public function filterForm(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Select::make('academic_year_id')
-                    ->label('Tahun Ajaran')
-                    ->options(AcademicYear::where('is_archived', false)->where('is_active', true)->pluck('name', 'id'))
-                    ->placeholder('Semua')
-                    ->reactive()
-                    ->afterStateUpdated(function (callable $set) {
-                        $set('semester_id', null);
-                        $this->resetTable();
-                    }),
-                Select::make('semester_id')
-                    ->label('Semester')
-                    ->reactive()
-                    ->options(fn (callable $get) => Semester::when(
-                        $get('academic_year_id'),
-                        fn (Builder $q, $v) => $q->where('academic_year_id', $v)
-                    )->whereHas('academicYear', fn ($q) => $q->where('is_archived', false))->pluck('name', 'id'))
-                    ->placeholder('Semua')
-                    ->afterStateUpdated(fn () => $this->resetTable()),
                 Select::make('class_id')
                     ->label('Kelas')
                     ->options(Classes::pluck('name', 'id'))
-                    ->placeholder('Semua')
-                    ->reactive()
-                    ->afterStateUpdated(fn () => $this->resetTable()),
-            ])
-            ->statePath('filters');
+                    ->placeholder('Semua Kelas')
+                    ->live()
+                    ->afterStateUpdated(fn () => $this->updatedClassId()),
+                Select::make('academic_year_id')
+                    ->label('Tahun Ajaran')
+                    ->options(fn () => AcademicYear::where('is_archived', false)->pluck('name', 'id'))
+                    ->placeholder('Semua Tahun Ajaran')
+                    ->live()
+                    ->afterStateUpdated(fn () => $this->updatedAcademicYearId()),
+                Select::make('semester_id')
+                    ->label('Semester')
+                    ->options(fn () => $this->academic_year_id
+                        ? Semester::where('academic_year_id', $this->academic_year_id)
+                            ->whereHas('academicYear', fn ($q) => $q->where('is_archived', false))
+                            ->pluck('name', 'id')
+                        : Semester::whereHas('academicYear', fn ($q) => $q->where('is_archived', false))
+                            ->pluck('name', 'id')
+                    )
+                    ->placeholder('Semua Semester')
+                    ->live()
+                    ->afterStateUpdated(fn () => $this->updatedSemesterId()),
+            ]);
     }
 
     public function table(Table $table): Table
     {
         return $table
-            ->query(
-                Attendance::query()
-                    ->select([
-                        'learner_id',
-                        DB::raw('SUM(sick) as total_sick'),
-                        DB::raw('SUM(permission) as total_permission'),
-                        DB::raw('SUM(absent) as total_absent'),
-                    ])
-                    ->with('learner')
-                    ->when($this->filters['academic_year_id'] ?? null, fn (Builder $q, $v) => $q->where('academic_year_id', $v))
-                    ->when($this->filters['semester_id'] ?? null, fn (Builder $q, $v) => $q->where('semester_id', $v))
-                    ->when($this->filters['class_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
-                        'learner.classLearners', fn (Builder $q) => $q->where('class_id', $v)
-                    ))
-                    ->groupBy('learner_id')
-            )
+            ->query($this->getTableQuery())
             ->columns([
-                TextColumn::make('learner.nis')->label('NIS')->searchable(),
-                TextColumn::make('learner.name')->label('Nama')->searchable(),
-                TextColumn::make('total_sick')->label('Sakit')->sortable(),
-                TextColumn::make('total_permission')->label('Izin')->sortable(),
-                TextColumn::make('total_absent')->label('Tanpa Keterangan')->sortable(),
+                TextColumn::make('nis')
+                    ->label('NIS')
+                    ->searchable(),
+                TextColumn::make('learner_name')
+                    ->label('Nama')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('class_name')
+                    ->label('Kelas')
+                    ->sortable(),
+                TextColumn::make('academic_year')
+                    ->label('Tahun Ajaran')
+                    ->sortable(),
+                TextColumn::make('semester')
+                    ->label('Semester')
+                    ->sortable(),
+                TextColumn::make('total_sick')
+                    ->label('Sakit')
+                    ->sortable()
+                    ->alignCenter(),
+                TextColumn::make('total_permission')
+                    ->label('Izin')
+                    ->sortable()
+                    ->alignCenter(),
+                TextColumn::make('total_absent')
+                    ->label('Tanpa Keterangan')
+                    ->sortable()
+                    ->alignCenter(),
             ])
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(10)
+            ->defaultKeySort(false)
+            ->defaultSort('learner_name')
             ->headerActions([
-                Action::make('exportCsv')
+                Action::make('exportExcel')
                     ->label('Ekspor Excel')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->action(fn () => $this->exportCsv()),
+                    ->action(fn () => $this->exportExcel()),
             ]);
     }
 
-    public function exportCsv(): StreamedResponse
+    protected function getTableQuery(): Builder
     {
-        $rows = Attendance::query()
-            ->select([
-                'learner_id',
-                DB::raw('SUM(sick) as total_sick'),
-                DB::raw('SUM(permission) as total_permission'),
-                DB::raw('SUM(absent) as total_absent'),
-            ])
-            ->with('learner')
-            ->when($this->filters['academic_year_id'] ?? null, fn (Builder $q, $v) => $q->where('academic_year_id', $v))
-            ->when($this->filters['semester_id'] ?? null, fn (Builder $q, $v) => $q->where('semester_id', $v))
-            ->when($this->filters['class_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
-                'learner.classLearners', fn (Builder $q) => $q->where('class_id', $v)
-            ))
-            ->groupBy('learner_id')
-            ->get();
+        $classIds = $this->class_id ? [$this->class_id] : Classes::pluck('id')->toArray();
 
-        return app(ExcelService::class)->exportReport('attendances.xlsx', [
-            'NIS', 'Nama', 'Sakit', 'Izin', 'Tanpa Keterangan',
-        ], $rows, fn ($row) => [
-            $row->learner?->nis,
-            $row->learner?->name,
-            (int) $row->total_sick,
-            (int) $row->total_permission,
-            (int) $row->total_absent,
-        ]);
+        $sub = DB::table('attendances', 'a')
+            ->select(
+                'l.nis as nis',
+                'l.name as learner_name',
+                'c.name as class_name',
+                'ay.name as academic_year',
+                's.name as semester',
+                DB::raw('SUM(a.sick) as total_sick'),
+                DB::raw('SUM(a.permission) as total_permission'),
+                DB::raw('SUM(a.absent) as total_absent'),
+            )
+            ->join('learners as l', 'l.id', '=', 'a.learner_id')
+            ->join('academic_years as ay', 'ay.id', '=', 'a.academic_year_id')
+            ->join('semesters as s', 's.id', '=', 'a.semester_id')
+            ->leftJoin('class_learners as cl', function ($join) {
+                $join->on('cl.learner_id', '=', 'a.learner_id')
+                    ->whereColumn('cl.academic_year_id', '=', 'a.academic_year_id');
+            })
+            ->leftJoin('classes as c', 'c.id', '=', 'cl.class_id')
+            ->when($this->academic_year_id, fn ($q, $v) => $q->where('a.academic_year_id', $v))
+            ->when($this->semester_id, fn ($q, $v) => $q->where('a.semester_id', $v))
+            ->where('ay.is_archived', false)
+            ->when(! empty($classIds), function ($q) use ($classIds) {
+                $learnerIds = ClassLearner::whereIn('class_id', $classIds)->pluck('learner_id');
+                $q->whereIn('a.learner_id', $learnerIds);
+            })
+            ->groupBy('l.id', 'l.nis', 'l.name', 'c.id', 'c.name', 'ay.id', 'ay.name', 's.id', 's.name');
+
+        return Learner::query()
+            ->fromSub($sub, 'attendance_pivot')
+            ->select('*');
     }
 
     public function getTableRecordKey(Model|array $record): string
@@ -161,5 +182,71 @@ class ReportAttendances extends Page implements HasTable
         }
 
         return parent::getTableRecordKey($record);
+    }
+
+    public function exportExcel(): StreamedResponse
+    {
+        $classIds = $this->class_id ? [$this->class_id] : Classes::pluck('id')->toArray();
+
+        $rows = DB::table('attendances', 'a')
+            ->select(
+                'l.nis as nis',
+                'l.name as learner_name',
+                'c.name as class_name',
+                'ay.name as academic_year',
+                's.name as semester',
+                DB::raw('SUM(a.sick) as total_sick'),
+                DB::raw('SUM(a.permission) as total_permission'),
+                DB::raw('SUM(a.absent) as total_absent'),
+            )
+            ->join('learners as l', 'l.id', '=', 'a.learner_id')
+            ->join('academic_years as ay', 'ay.id', '=', 'a.academic_year_id')
+            ->join('semesters as s', 's.id', '=', 'a.semester_id')
+            ->leftJoin('class_learners as cl', function ($join) {
+                $join->on('cl.learner_id', '=', 'a.learner_id')
+                    ->whereColumn('cl.academic_year_id', '=', 'a.academic_year_id');
+            })
+            ->leftJoin('classes as c', 'c.id', '=', 'cl.class_id')
+            ->when($this->academic_year_id, fn ($q, $v) => $q->where('a.academic_year_id', $v))
+            ->when($this->semester_id, fn ($q, $v) => $q->where('a.semester_id', $v))
+            ->where('ay.is_archived', false)
+            ->when(! empty($classIds), function ($q) use ($classIds) {
+                $learnerIds = ClassLearner::whereIn('class_id', $classIds)->pluck('learner_id');
+                $q->whereIn('a.learner_id', $learnerIds);
+            })
+            ->groupBy('l.id', 'l.nis', 'l.name', 'c.id', 'c.name', 'ay.id', 'ay.name', 's.id', 's.name')
+            ->orderBy('l.name')
+            ->get();
+
+        return app(ExcelService::class)->exportReport('attendances.xlsx', [
+            'NIS', 'Nama', 'Kelas', 'Tahun Ajaran', 'Semester', 'Sakit', 'Izin', 'Tanpa Keterangan',
+        ], $rows, fn ($row) => [
+            $row->nis,
+            $row->learner_name,
+            $row->class_name,
+            $row->academic_year,
+            $row->semester,
+            (int) $row->total_sick,
+            (int) $row->total_permission,
+            (int) $row->total_absent,
+        ]);
+    }
+
+    public function updatedAcademicYearId(): void
+    {
+        $this->semester_id = null;
+        $this->resetTable();
+    }
+
+    public function updatedSemesterId(): void
+    {
+        $this->resetTable();
+    }
+
+    public function updatedClassId(): void
+    {
+        $this->academic_year_id = null;
+        $this->semester_id = null;
+        $this->resetTable();
     }
 }

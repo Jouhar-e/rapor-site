@@ -83,15 +83,22 @@
     .nilai .no {
         width: 8mm;
         text-align: center;
+        vertical-align: middle;
+        font-weight: bold;
     }
 
     .nilai .mapel {
         width: 70mm;
+        vertical-align: middle;
+        text-align: left;
     }
 
     .nilai .nilai-akhir {
         width: 20mm;
         text-align: center;
+        vertical-align: middle;
+        font-weight: bold;
+        font-size: 11pt;
     }
 
     .nilai .deskripsi {
@@ -136,15 +143,21 @@
     .ekskul .no {
         width: 8mm;
         text-align: center;
+        vertical-align: middle;
+        font-weight: bold;
     }
 
     .ekskul .nama {
         width: 70mm;
+        vertical-align: middle;
     }
 
     .ekskul .predikat {
         width: 22mm;
         text-align: center;
+        vertical-align: middle;
+        font-weight: bold;
+        font-size: 11pt;
     }
 
     .ekskul .keterangan {
@@ -201,7 +214,7 @@
 
     .catatan-box {
         width: 93%;
-        min-height: 32mm;
+        min-height: 27mm;
         border: 1px solid #000;
         padding: 5mm;
         font-size: 10pt;
@@ -213,6 +226,7 @@
    TANDA TANGAN
 ========================================== */
 
+
     .signature {
         width: 100%;
         margin-top: 12mm;
@@ -222,20 +236,7 @@
     .signature td {
         border: none;
         vertical-align: top;
-        text-align: center;
         font-size: 10pt;
-    }
-
-    .signature .parent {
-        width: 33%;
-    }
-
-    .signature .headmaster {
-        width: 34%;
-    }
-
-    .signature .homeroom {
-        width: 33%;
     }
 
     .signature-space {
@@ -243,13 +244,16 @@
     }
 
     .signature-name {
+        display: inline-block;
         font-weight: bold;
         text-decoration: underline;
     }
 
     .signature-nip {
-        font-size: 9pt;
+        display: block;
         margin-top: 2px;
+        font-size: 9pt;
+        text-align: left;
     }
 </style>
 
@@ -328,7 +332,7 @@
     </table>
 
     <div class="section-title">
-        A. NILAI AKADEMIK
+        A. Nilai Akademik
     </div>
 
     {{-- ===========================
@@ -393,7 +397,7 @@
 
                 </td>
 
-                <td>
+                <td class="mapel">
 
                     {{ $grade->subject?->name }}
 
@@ -436,10 +440,9 @@
     {{-- ==========================================
         B. EKSTRAKURIKULER
     ========================================== --}}
+    <div class="ekskul-title" style="page-break-before: always;">
 
-    <div class="ekskul-title">
-
-        B. EKSTRAKURIKULER
+        B. Ekstrakurikuler
 
     </div>
 
@@ -481,7 +484,7 @@
 
                 </td>
 
-                <td>
+                <td class="nama">
 
                     {{ $ekskul->extracurricular?->name ?? '-' }}
 
@@ -525,7 +528,7 @@
 
     <div class="absensi-title">
 
-        C. KETIDAKHADIRAN
+        C. Ketidakhadiran
 
     </div>
 
@@ -587,7 +590,7 @@
 
     <div class="catatan-title">
 
-        D. CATATAN WALI KELAS
+        D. Catatan Wali Kelas
 
     </div>
 
@@ -604,7 +607,7 @@
         @endif
 
     </div>
-    
+
     {{-- ==========================================
      TANDA TANGAN
 ========================================== --}}
@@ -614,28 +617,31 @@
         <tr>
 
             <td class="parent">
-
-                Mengetahui,
-
-                <br>
-
-                Orang Tua / Wali
-
+                <div class="signature-title">
+                    Mengetahui,
+                    <br>
+                    Orang Tua / Wali
+                </div>
             </td>
 
             <td class="headmaster">
 
-                {{ $school->city }},
-                {{ now()->translatedFormat('d F Y') }}
+                <div class="signature-title">
 
-                <br>
 
-                Kepala {{ $school->name }}
+
+                    <br>
+
+                    Kepala {{ $school->name }}
+
+                </div>
 
             </td>
 
             <td class="homeroom">
-
+                {{ $school->city }},
+                {{ \Carbon\Carbon::parse($printDate)->translatedFormat('d F Y') }}
+                <br>
                 Wali Kelas
 
             </td>
@@ -664,39 +670,27 @@
 
             </td>
 
-            <td>
+            <td class="headmaster">
 
                 <div class="signature-name">
-
                     {{ strtoupper($school->headmaster_name) }}
-
                 </div>
 
-                @if(!empty($school->headmaster_nip))
                 <div class="signature-nip">
-
-                    NIP. {{ $school->headmaster_nip }}
-
+                    NIP : {{ $school->headmaster_nip ?: '-' }}
                 </div>
-                @endif
 
             </td>
 
-            <td>
+            <td class="homeroom">
 
                 <div class="signature-name">
-
                     {{ strtoupper($homeroomTeacher?->user?->name ?? '-') }}
-
                 </div>
 
-                @if(!empty($homeroomTeacherNip))
-                <div class="signature-nip">
-
-                    NIP. {{ $homeroomTeacherNip }}
-
+                <div class="signature-nip" style="text-align: left;">
+                    NIP : {{ $homeroomTeacherNip ?: '-' }}
                 </div>
-                @endif
 
             </td>
 

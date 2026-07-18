@@ -56,6 +56,7 @@ class AuditLogResource extends Resource
     {
         return $table
             ->recordTitleAttribute('id')
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('user')
                     ->searchable(),

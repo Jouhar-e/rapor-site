@@ -5,6 +5,10 @@
 @php
 $logo = null;
 
+if (! isset($school) || ! $school) {
+    $school = (object) ['name' => 'PKBM', 'npsn' => '-', 'address' => '-', 'district' => '-', 'city' => '-', 'province' => '-', 'postal_code' => '-', 'phone' => '-', 'email' => '-', 'website' => '-', 'logo' => null, 'headmaster_name' => '-', 'headmaster_nip' => '-'];
+}
+
 $paths = [
 storage_path('app/private/'.$school->logo),
 storage_path('app/public/'.$school->logo),
@@ -43,7 +47,7 @@ break;
     }
 
     .cover-logo img {
-        width: 110px;
+        width: 120px;
     }
 
     .cover-title {

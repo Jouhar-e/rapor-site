@@ -6,7 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
+    {
+        Schema::dropIfExists('competency_templates');
+    }
+
+    public function down(): void
     {
         Schema::create('competency_templates', function (Blueprint $table) {
             $table->id();
@@ -16,10 +24,5 @@ return new class extends Migration
             $table->text('improvement_text')->nullable();
             $table->timestamps();
         });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('competency_templates');
     }
 };

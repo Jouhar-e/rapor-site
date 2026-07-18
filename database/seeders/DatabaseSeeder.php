@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\SchoolProfile;
 use App\Models\Tutor;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -43,6 +44,14 @@ class DatabaseSeeder extends Seeder
             PhaseSeeder::class,
             SubjectGroupSeeder::class,
         ]);
+
+        if (SchoolProfile::doesntExist()) {
+            SchoolProfile::factory()->create([
+                'name' => 'PKBM Miftahul Ulum',
+                'city' => 'Rembang',
+                'province' => 'Jawa Tengah',
+            ]);
+        }
 
         if ($adminRole->hasAllPermissions(Permission::all())) {
             return;

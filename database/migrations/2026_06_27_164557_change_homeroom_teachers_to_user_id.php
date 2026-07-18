@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! Schema::hasTable('homeroom_teachers')) {
+            return;
+        }
+
         Schema::table('homeroom_teachers', function (Blueprint $table) {
             $table->dropUnique('homeroom_teachers_tutor_id_class_id_academic_year_id_unique');
             $table->dropColumn('tutor_id');
@@ -18,6 +22,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasTable('homeroom_teachers')) {
+            return;
+        }
+
         Schema::table('homeroom_teachers', function (Blueprint $table) {
             $table->dropUnique('homeroom_teachers_user_id_class_id_academic_year_id_unique');
             $table->dropForeign(['user_id']);

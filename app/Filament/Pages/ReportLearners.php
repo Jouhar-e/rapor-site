@@ -6,7 +6,6 @@ use App\Models\AcademicYear;
 use App\Models\Classes;
 use App\Models\Learner;
 use App\Models\Program;
-use App\Models\Semester;
 use App\Services\ExcelService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -74,9 +73,10 @@ class ReportLearners extends Page implements HasTable
                 Select::make('status')
                     ->label('Status')
                     ->options([
-                        'active' => 'Aktif',
-                        'alumni' => 'Alumni',
-                        'dropped' => 'Keluar',
+                        'aktif' => 'Aktif',
+                        'lulus' => 'Lulus',
+                        'keluar' => 'Keluar',
+                        'pindah' => 'Pindah',
                     ])
                     ->placeholder('Semua Status')
                     ->reactive()
@@ -87,18 +87,8 @@ class ReportLearners extends Page implements HasTable
                     ->placeholder('Semua')
                     ->reactive()
                     ->afterStateUpdated(function (callable $set) {
-                        $set('semester_id', null);
                         $this->resetTable();
                     }),
-                Select::make('semester_id')
-                    ->label('Semester')
-                    ->reactive()
-                    ->options(fn (callable $get) => Semester::when(
-                        $get('academic_year_id'),
-                        fn (Builder $q, $v) => $q->where('academic_year_id', $v)
-                    )->whereHas('academicYear', fn ($q) => $q->where('is_archived', false))->pluck('name', 'id'))
-                    ->placeholder('Semua')
-                    ->afterStateUpdated(fn () => $this->resetTable()),
                 Select::make('class_id')
                     ->label('Kelas')
                     ->reactive()
@@ -117,16 +107,13 @@ class ReportLearners extends Page implements HasTable
         return $table
             ->query(
                 Learner::query()
-                    ->when($this->filters['status'] ?? null, fn (Builder $q, $v) => $q->where('status', $v))
-                    ->when($this->filters['program_id'] ?? null, fn (Builder $q, $v) => $q->where('program_id', $v))
-                    ->when($this->filters['academic_year_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
-                        'classLearners', fn (Builder $q) => $q->where('academic_year_id', $v)
+                    ->when(filled($this->filters['status'] ?? null), fn (Builder $q) => $q->where('status', $this->filters['status']))
+                    ->when(filled($this->filters['program_id'] ?? null), fn (Builder $q) => $q->where('program_id', $this->filters['program_id']))
+                    ->when(filled($this->filters['academic_year_id'] ?? null), fn (Builder $q) => $q->whereHas(
+                        'classLearners', fn (Builder $q) => $q->where('academic_year_id', $this->filters['academic_year_id'])
                     ))
-                    ->when($this->filters['semester_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
-                        'classLearners', fn (Builder $q) => $q->where('semester_id', $v)
-                    ))
-                    ->when($this->filters['class_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
-                        'classLearners', fn (Builder $q) => $q->where('class_id', $v)
+                    ->when(filled($this->filters['class_id'] ?? null), fn (Builder $q) => $q->whereHas(
+                        'classLearners', fn (Builder $q) => $q->where('class_id', $this->filters['class_id'])
                     ))
             )
             ->columns([
@@ -158,16 +145,13 @@ class ReportLearners extends Page implements HasTable
     {
         $rows = Learner::query()
             ->with('program')
-            ->when($this->filters['status'] ?? null, fn (Builder $q, $v) => $q->where('status', $v))
-            ->when($this->filters['program_id'] ?? null, fn (Builder $q, $v) => $q->where('program_id', $v))
-            ->when($this->filters['academic_year_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
-                'classLearners', fn (Builder $q) => $q->where('academic_year_id', $v)
+            ->when(filled($this->filters['status'] ?? null), fn (Builder $q) => $q->where('status', $this->filters['status']))
+            ->when(filled($this->filters['program_id'] ?? null), fn (Builder $q) => $q->where('program_id', $this->filters['program_id']))
+            ->when(filled($this->filters['academic_year_id'] ?? null), fn (Builder $q) => $q->whereHas(
+                'classLearners', fn (Builder $q) => $q->where('academic_year_id', $this->filters['academic_year_id'])
             ))
-            ->when($this->filters['semester_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
-                'classLearners', fn (Builder $q) => $q->where('semester_id', $v)
-            ))
-            ->when($this->filters['class_id'] ?? null, fn (Builder $q, $v) => $q->whereHas(
-                'classLearners', fn (Builder $q) => $q->where('class_id', $v)
+            ->when(filled($this->filters['class_id'] ?? null), fn (Builder $q) => $q->whereHas(
+                'classLearners', fn (Builder $q) => $q->where('class_id', $this->filters['class_id'])
             ))
             ->get();
 

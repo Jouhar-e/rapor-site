@@ -59,9 +59,9 @@ class ExcelService
     {
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
-        $headers = ['nis', 'name', 'task_score', 'pts_score', 'pas_score', 'practice_score'];
+        $headers = ['nis', 'name', 'task_score', 'pts_score', 'pas_score', 'practice_score', 'competency_description'];
 
-        foreach (range('A', 'F') as $i => $col) {
+        foreach (range('A', 'G') as $i => $col) {
             $sheet->setCellValue($col.'1', $headers[$i]);
             $sheet->getStyle($col.'1')->getFont()->setBold(true);
         }
@@ -72,6 +72,7 @@ class ExcelService
         $sheet->getColumnDimension('D')->setWidth(15);
         $sheet->getColumnDimension('E')->setWidth(15);
         $sheet->getColumnDimension('F')->setWidth(15);
+        $sheet->getColumnDimension('G')->setWidth(40);
 
         if ($classId) {
             $class = Classes::with('classLearners.learner')->find($classId);

@@ -186,7 +186,7 @@ class ImportExtracurricular extends Page implements HasTable
                 'academic_year_id' => $academicYearId,
                 'semester_id' => $semesterId,
                 'predicate' => $row['grade'] ?? '',
-                'description' => $row['notes'] ?? '',
+                'description' => $row['description'] ?? $row['notes'] ?? '',
             ];
         }
 

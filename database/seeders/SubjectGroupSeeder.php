@@ -11,9 +11,8 @@ class SubjectGroupSeeder extends Seeder
     {
         $groups = [
             ['name' => 'Kelompok Mata Pelajaran Umum', 'sort_order' => 1],
-            ['name' => 'Kelompok Pemberdayaan', 'sort_order' => 2],
-            ['name' => 'Kelompok Keterampilan', 'sort_order' => 3],
-            ['name' => 'Muatan Lokal', 'sort_order' => 4],
+            ['name' => 'Kelompok Pemberdayaan dan Keterampilan Berbasis Profil Pelajar Pancasila', 'sort_order' => 2],
+            ['name' => 'Muatan Lokal', 'sort_order' => 3],
         ];
 
         foreach ($groups as $group) {

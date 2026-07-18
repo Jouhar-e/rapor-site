@@ -10,17 +10,14 @@ return new class extends Migration
     {
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('user')->nullable();
-            $table->string('role')->nullable();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('ip_address')->nullable();
-            $table->string('browser')->nullable();
-            $table->string('url')->nullable();
-            $table->string('method')->nullable();
+            $table->string('user_agent')->nullable();
             $table->string('action')->nullable();
-            $table->string('table_name')->nullable();
-            $table->unsignedBigInteger('record_id')->nullable();
-            $table->text('old_value')->nullable();
-            $table->text('new_value')->nullable();
+            $table->string('model_type')->nullable();
+            $table->unsignedBigInteger('model_id')->nullable();
+            $table->text('old_values')->nullable();
+            $table->text('new_values')->nullable();
             $table->timestamps();
         });
     }

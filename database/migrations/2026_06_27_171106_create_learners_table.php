@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('program_id')->constrained()->cascadeOnDelete();
             $table->string('nis')->unique();
-            $table->string('nisn')->unique();
+            $table->string('nisn')->nullable();
             $table->string('name');
             $table->string('gender');
             $table->string('birth_place')->nullable();

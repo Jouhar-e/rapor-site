@@ -1,10 +1,7 @@
 <x-filament-panels::page>
-    <x-filament::section>
-        <x-slot name="heading">
-            Filter
-        </x-slot>
-        {{ $this->form }}
-    </x-filament::section>
+    <div class="mb-6">
+        {{ $this->filterForm }}
+    </div>
 
     {{ $this->table }}
 </x-filament-panels::page>

@@ -415,6 +415,14 @@ class ImportService
                 continue;
             }
 
+            $predicate = $row['predicate'] ?? $row['grade'] ?? '';
+
+            if (empty(trim($predicate))) {
+                $skipped++;
+
+                continue;
+            }
+
             $rowErrors = $this->validateRow($row, 'extracurricular');
 
             if (! empty($rowErrors)) {
@@ -438,7 +446,7 @@ class ImportService
                     'semester_id' => $row['semester_id'],
                 ],
                 [
-                    'predicate' => $row['predicate'] ?? $row['grade'] ?? '',
+                    'predicate' => $predicate,
                     'description' => $row['description'] ?? $row['notes'] ?? '',
                 ],
             );

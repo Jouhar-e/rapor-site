@@ -86,7 +86,7 @@
         <tr>
             <td class="no">1</td>
             <td class="label">Nama Peserta Didik</td>
-            <td class="colon">:</td>
+            <td>:</td>
             <td><strong>{{ strtoupper($learner->name) }}</strong></td>
         </tr>
 
@@ -245,7 +245,7 @@
 
             <td class="sign">
 
-                {{ $school->city }}, {{ now()->translatedFormat('d F Y') }}
+                {{ $school->city }}, {{ \Carbon\Carbon::parse($printDate)->translatedFormat('d F Y') }}
 
                 <br><br>
 

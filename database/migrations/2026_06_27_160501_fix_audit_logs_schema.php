@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! Schema::hasTable('audit_logs')) {
+            return;
+        }
+
         Schema::table('audit_logs', function (Blueprint $table) {
             $table->dropColumn(['user', 'role', 'browser', 'url', 'method', 'table_name', 'record_id', 'old_value', 'new_value']);
         });
@@ -24,6 +28,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasTable('audit_logs')) {
+            return;
+        }
+
         Schema::table('audit_logs', function (Blueprint $table) {
             $table->dropColumn(['user_id', 'model_type', 'model_id', 'old_values', 'new_values', 'user_agent']);
         });

@@ -21,6 +21,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
@@ -177,10 +178,15 @@ class LearnerResource extends Resource
         return $table
             ->recordTitleAttribute('name')
             ->columns([
-                TextColumn::make('class')
+                TextColumn::make('kelas')
                     ->label('Kelas')
                     ->getStateUsing(function (Model $record): string {
                         return $record->classLearners->first()?->classes?->name ?? '-';
+                    }),
+                TextColumn::make('tahun_ajaran')
+                    ->label('Tahun Ajaran')
+                    ->getStateUsing(function (Model $record): string {
+                        return $record->classLearners->first()?->academicYear?->name ?? '-';
                     }),
                 TextColumn::make('nis')
                     ->label('NIS')
@@ -235,7 +241,13 @@ class LearnerResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('class_id')
+                    ->label('Kelas')
+                    ->options(fn () => Classes::pluck('name', 'id'))
+                    ->query(fn ($query, array $state) => $query->when(
+                        filled($state['value'] ?? null),
+                        fn ($q) => $q->whereHas('classLearners', fn ($q) => $q->where('class_id', $state['value']))
+                    )),
             ])
             ->recordActions([
                 EditAction::make()

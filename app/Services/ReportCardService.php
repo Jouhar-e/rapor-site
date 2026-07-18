@@ -59,8 +59,9 @@ class ReportCardService
         int $academicYearId,
         int $semesterId,
         array $sections = ['cover', 'identitas', 'biodata', 'nilai'],
+        ?string $printDate = null,
     ): StreamedResponse {
-        $data = $this->loadData($learnerId, $academicYearId, $semesterId);
+        $data = $this->loadData($learnerId, $academicYearId, $semesterId, $printDate);
         $html = $this->renderHtml($data, $sections);
 
         $learner = $data['learner'];
@@ -95,6 +96,7 @@ class ReportCardService
         int $academicYearId,
         int $semesterId,
         array $sections = ['cover', 'identitas', 'biodata', 'nilai'],
+        ?string $printDate = null,
     ): StreamedResponse {
         $zip = new \ZipArchive;
         $tempZip = tempnam(sys_get_temp_dir(), 'rapot_zip_').'.zip';
@@ -106,7 +108,7 @@ class ReportCardService
         $chromePath = $this->getChromePath();
 
         foreach ($learnerIds as $learnerId) {
-            $data = $this->loadData((int) $learnerId, $academicYearId, $semesterId);
+            $data = $this->loadData((int) $learnerId, $academicYearId, $semesterId, $printDate);
             $html = $this->renderHtml($data, $sections);
 
             $browsershot = Browsershot::html($html)
@@ -140,9 +142,13 @@ class ReportCardService
         ]);
     }
 
-    protected function loadData(int $learnerId, int $academicYearId, int $semesterId): array
+    protected function loadData(int $learnerId, int $academicYearId, int $semesterId, ?string $printDate = null): array
     {
-        $school = SchoolProfile::first();
+        $school = SchoolProfile::first() ?? SchoolProfile::factory()->create([
+            'name' => 'PKBM',
+            'city' => 'Kota',
+            'province' => 'Provinsi',
+        ]);
         $academicYear = AcademicYear::findOrFail($academicYearId);
         $semester = Semester::findOrFail($semesterId);
         $learner = Learner::with('program')->findOrFail($learnerId);
@@ -199,7 +205,6 @@ class ReportCardService
 
         $reportNumber = ClassLearner::where('class_id', $class?->id)
             ->where('academic_year_id', $academicYearId)
-            ->where('semester_id', $semesterId)
             ->with('learner')
             ->get()
             ->sortBy(fn ($cl) => $cl->learner?->name ?? '')
@@ -213,6 +218,7 @@ class ReportCardService
             'class', 'phaseName', 'programName',
             'homeroomTeacher', 'homeroomTeacherNip', 'groupedGrades', 'attendance',
             'extracurriculars', 'homeroomNote', 'reportNumber',
+            'printDate',
         );
     }
 

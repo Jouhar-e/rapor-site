@@ -37,7 +37,6 @@ class PermissionSeeder extends Seeder
 
             'phase.view', 'phase.create', 'phase.edit', 'phase.delete',
             'subject-group.view', 'subject-group.create', 'subject-group.edit', 'subject-group.delete',
-            'competency-template.view', 'competency-template.create', 'competency-template.edit', 'competency-template.delete',
             'learner-report.view', 'learner-report.create', 'learner-report.edit', 'learner-report.delete',
             'school-profile.view', 'school-profile.edit',
             'grading-setting.view', 'grading-setting.edit',

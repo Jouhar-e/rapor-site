@@ -83,9 +83,9 @@ class ReportTutors extends Page implements HasTable
         return $table
             ->query(
                 Tutor::query()
-                    ->when($this->filters['status'] ?? null, fn (Builder $q, $v) => $q->where('is_active', $v))
-                    ->when($this->filters['program_id'] ?? null, function (Builder $q, $v) {
-                        $q->whereHas('user.homeroomTeachers.classes', fn (Builder $q) => $q->where('program_id', $v));
+                    ->when(filled($this->filters['status'] ?? null), fn (Builder $q) => $q->where('is_active', $this->filters['status']))
+                    ->when(filled($this->filters['program_id'] ?? null), function (Builder $q) {
+                        $q->whereHas('user.homeroomTeachers.classes', fn (Builder $q) => $q->where('program_id', $this->filters['program_id']));
                     })
             )
             ->columns([
@@ -111,9 +111,9 @@ class ReportTutors extends Page implements HasTable
     public function exportCsv(): StreamedResponse
     {
         $rows = Tutor::query()
-            ->when($this->filters['status'] ?? null, fn (Builder $q, $v) => $q->where('is_active', $v))
-            ->when($this->filters['program_id'] ?? null, function (Builder $q, $v) {
-                $q->whereHas('user.homeroomTeachers.classes', fn (Builder $q) => $q->where('program_id', $v));
+            ->when(filled($this->filters['status'] ?? null), fn (Builder $q) => $q->where('is_active', $this->filters['status']))
+            ->when(filled($this->filters['program_id'] ?? null), function (Builder $q) {
+                $q->whereHas('user.homeroomTeachers.classes', fn (Builder $q) => $q->where('program_id', $this->filters['program_id']));
             })
             ->get();
 

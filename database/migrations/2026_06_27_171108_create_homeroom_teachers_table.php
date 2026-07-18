@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::create('homeroom_teachers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tutor_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('class_id')->constrained()->cascadeOnDelete();
             $table->foreignId('academic_year_id')->constrained()->cascadeOnDelete();
-            $table->unique(['tutor_id', 'class_id', 'academic_year_id']);
+            $table->unique(['user_id', 'class_id', 'academic_year_id']);
             $table->timestamps();
         });
     }

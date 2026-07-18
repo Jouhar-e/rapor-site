@@ -13,7 +13,6 @@ class GradeService
     public function __construct(
         protected GradingSetting $gradingSetting,
         protected GradePredicate $gradePredicate,
-        protected CompetencyService $competencyService,
     ) {}
 
     public function calculateFinalScore(
@@ -62,8 +61,6 @@ class GradeService
         $grade->final_score = $finalScore;
         $grade->predicate = $predicate;
         $grade->save();
-
-        $grade = $this->competencyService->generateAndSave($grade);
 
         return $grade;
     }
