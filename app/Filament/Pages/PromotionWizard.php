@@ -20,6 +20,7 @@ use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 use UnitEnum;
 
@@ -72,8 +73,14 @@ class PromotionWizard extends Page
                                     ->toArray())
                                 ->required()
                                 ->reactive()
-                                ->afterStateUpdated(function (callable $set): void {
-                                    $set('mappings', []);
+                                ->afterStateUpdated(function (callable $set, $state): void {
+                                    $mappings = $state
+                                        ? PromotionMapping::where('academic_year_id', $state)
+                                            ->whereNull('promoted_at')
+                                            ->get(['source_class_id', 'destination_class_id'])
+                                            ->toArray()
+                                        : [];
+                                    $set('mappings', $mappings);
                                 }),
                             Select::make('year_option')
                                 ->label('Opsi Tahun Ajaran Tujuan')
@@ -85,7 +92,6 @@ class PromotionWizard extends Page
                                 ->reactive()
                                 ->afterStateUpdated(function (callable $set): void {
                                     $set('dest_academic_year_id', null);
-                                    $set('mappings', []);
                                 }),
                             Select::make('dest_academic_year_id')
                                 ->label('Tahun Ajaran Tujuan')
@@ -97,10 +103,7 @@ class PromotionWizard extends Page
                                     : [])
                                 ->visible(fn (callable $get): bool => $get('year_option') === 'existing')
                                 ->required(fn (callable $get): bool => $get('year_option') === 'existing')
-                                ->reactive()
-                                ->afterStateUpdated(function (callable $set): void {
-                                    $set('mappings', []);
-                                }),
+                                ->reactive(),
                             Grid::make()
                                 ->visible(fn (callable $get): bool => $get('year_option') === 'new')
                                 ->schema([
@@ -289,16 +292,29 @@ class PromotionWizard extends Page
 
         $service = app(PromotionService::class);
 
-        foreach (($data['mappings'] ?? []) as $mapping) {
-            PromotionMapping::updateOrCreate(
-                [
-                    'source_class_id' => $mapping['source_class_id'],
-                    'destination_class_id' => $mapping['destination_class_id'],
-                    'academic_year_id' => $sourceYear->id,
-                ],
-                ['promoted_at' => null, 'notes' => null]
-            );
-        }
+        DB::transaction(function () use ($data, $sourceYear): void {
+            $submittedKeys = collect($data['mappings'] ?? [])->map(fn ($m) => $m['source_class_id'].'-'.$m['destination_class_id']);
+
+            PromotionMapping::where('academic_year_id', $sourceYear->id)
+                ->whereNull('promoted_at')
+                ->get()
+                ->each(function (PromotionMapping $mapping) use ($submittedKeys): void {
+                    $key = $mapping->source_class_id.'-'.$mapping->destination_class_id;
+                    if (! $submittedKeys->contains($key)) {
+                        $mapping->delete();
+                    }
+                });
+
+            foreach (($data['mappings'] ?? []) as $mapping) {
+                PromotionMapping::firstOrCreate(
+                    [
+                        'source_class_id' => $mapping['source_class_id'],
+                        'destination_class_id' => $mapping['destination_class_id'],
+                        'academic_year_id' => $sourceYear->id,
+                    ],
+                );
+            }
+        });
 
         $service->executePromotions($sourceYear, $destYear);
 
