@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Database\Factories\ImportHistoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,9 +12,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class ImportHistory extends Model
 {
-    /** @use HasFactory<ImportHistoryFactory> */
-    use HasFactory;
-
     protected function casts(): array
     {
         return [
