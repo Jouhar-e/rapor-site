@@ -155,6 +155,8 @@ class GradeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(10)
             ->recordTitleAttribute('id')
             ->modifyQueryUsing(function (Builder $query) {
                 $user = Filament::auth()->user();
@@ -287,8 +289,9 @@ class GradeResource extends Resource
                 SelectFilter::make('semester_id')
                     ->label('Semester')
                     ->placeholder('Semua Semester')
-                    ->options(function (callable $get): array {
-                        $academicYearId = $get('academic_year_id');
+                    ->options(function ($livewire): array {
+                        $filters = $livewire->tableFilters;
+                        $academicYearId = $filters['academic_year_id']['value'] ?? null;
 
                         $query = Semester::whereHas('academicYear', fn ($q) => $q->where('is_archived', false));
 
@@ -297,15 +300,6 @@ class GradeResource extends Resource
                         }
 
                         return $query->pluck('name', 'id')->toArray();
-                    })
-                    ->query(function (Builder $query, array $data): Builder {
-                        $semesterIds = $data['values'] ?? [];
-
-                        if (empty($semesterIds)) {
-                            return $query;
-                        }
-
-                        return $query->whereIn('semester_id', $semesterIds);
                     }),
             ])
             ->recordActions([

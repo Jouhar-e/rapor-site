@@ -360,9 +360,9 @@ class ExcelService
     {
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
-        $headers = ['nis', 'name', 'grade'];
+        $headers = ['nis', 'name', 'grade', 'description'];
 
-        foreach (range('A', 'C') as $i => $col) {
+        foreach (range('A', 'D') as $i => $col) {
             $sheet->setCellValue($col.'1', $headers[$i]);
             $sheet->getStyle($col.'1')->getFont()->setBold(true);
         }
@@ -370,6 +370,7 @@ class ExcelService
         $sheet->getColumnDimension('A')->setWidth(15);
         $sheet->getColumnDimension('B')->setWidth(30);
         $sheet->getColumnDimension('C')->setWidth(15);
+        $sheet->getColumnDimension('D')->setWidth(30);
 
         if ($classId) {
             $class = Classes::with('classLearners.learner')->find($classId);
@@ -538,6 +539,39 @@ class ExcelService
 
         $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         $response->headers->set('Content-Disposition', 'attachment; filename="format-import-tutor.xlsx"');
+
+        return $response;
+    }
+
+    public function downloadSubjectTemplate(): StreamedResponse
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $headers = ['name', 'subject_group', 'description', 'is_active'];
+
+        foreach ($headers as $i => $header) {
+            $col = Coordinate::stringFromColumnIndex($i + 1);
+            $sheet->setCellValue($col.'1', $header);
+            $sheet->getStyle($col.'1')->getFont()->setBold(true);
+        }
+
+        $sheet->getColumnDimension('A')->setWidth(30);
+        $sheet->getColumnDimension('B')->setWidth(20);
+        $sheet->getColumnDimension('C')->setWidth(30);
+        $sheet->getColumnDimension('D')->setWidth(10);
+
+        $sheet->setCellValue('A2', 'Matematika');
+        $sheet->setCellValue('B2', 'Kelompok A');
+        $sheet->setCellValue('C2', 'Mata pelajaran matematika');
+        $sheet->setCellValue('D2', '1');
+
+        $response = new StreamedResponse(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        });
+
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', 'attachment; filename="format-import-mata-pelajaran.xlsx"');
 
         return $response;
     }

@@ -149,7 +149,6 @@ class ReportCardService
 
         $classLearner = ClassLearner::where('learner_id', $learnerId)
             ->where('academic_year_id', $academicYearId)
-            ->where('semester_id', $semesterId)
             ->with('classes.phase', 'classes.program')
             ->first();
 
@@ -198,11 +197,22 @@ class ReportCardService
             ->where('semester_id', $semesterId)
             ->first();
 
+        $reportNumber = ClassLearner::where('class_id', $class?->id)
+            ->where('academic_year_id', $academicYearId)
+            ->where('semester_id', $semesterId)
+            ->with('learner')
+            ->get()
+            ->sortBy(fn ($cl) => $cl->learner?->name ?? '')
+            ->values()
+            ->search(fn ($cl) => $cl->learner_id === $learnerId);
+
+        $reportNumber = $reportNumber !== false ? $reportNumber + 1 : null;
+
         return compact(
             'school', 'academicYear', 'semester', 'learner',
             'class', 'phaseName', 'programName',
             'homeroomTeacher', 'homeroomTeacherNip', 'groupedGrades', 'attendance',
-            'extracurriculars', 'homeroomNote',
+            'extracurriculars', 'homeroomNote', 'reportNumber',
         );
     }
 

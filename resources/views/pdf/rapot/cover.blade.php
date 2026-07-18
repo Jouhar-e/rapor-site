@@ -132,7 +132,7 @@ break;
             </tr>
 
             <tr>
-                <td>{{ $learner->report_number ?? '-' }}</td>
+                <td>{{ $reportNumber ?? $learner->report_number ?? '-' }}</td>
                 <td>NPSN : {{ $school->npsn }}</td>
             </tr>
 

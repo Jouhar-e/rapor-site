@@ -43,7 +43,9 @@ class CetakRapot extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return auth()->user()->can('report.view');
+        $user = auth()->user();
+
+        return $user->can('report.view') || $user->can('learner-report.view');
     }
 
     public ?array $filters = [];
@@ -89,10 +91,19 @@ class CetakRapot extends Page implements HasTable
                 Select::make('class_id')
                     ->label('Kelas')
                     ->live()
-                    ->options(fn (callable $get) => Classes::when(
-                        $get('academic_year_id'),
-                        fn (Builder $q, $v) => $q->whereHas('classLearners', fn (Builder $q) => $q->where('academic_year_id', $v))
-                    )->pluck('name', 'id'))
+                    ->options(function (callable $get) {
+                        $query = Classes::query();
+
+                        if (! auth()->user()->can('report.view')) {
+                            $query->whereIn('id', auth()->user()->homeroomTeachers()->pluck('class_id'));
+                        }
+
+                        if ($get('academic_year_id')) {
+                            $query->whereHas('classLearners', fn (Builder $q) => $q->where('academic_year_id', $get('academic_year_id')));
+                        }
+
+                        return $query->pluck('name', 'id');
+                    })
                     ->placeholder('Pilih Kelas')
                     ->afterStateUpdated(fn () => $this->resetTable()),
                 CheckboxList::make('sections')
@@ -121,12 +132,15 @@ class CetakRapot extends Page implements HasTable
                         fn (Builder $q, $v) => $q->where('academic_year_id', $v)
                     )
                     ->when(
-                        $this->filters['semester_id'] ?? null,
-                        fn (Builder $q, $v) => $q->where('semester_id', $v)
-                    )
-                    ->when(
                         $this->filters['class_id'] ?? null,
                         fn (Builder $q, $v) => $q->where('class_id', $v)
+                    )
+                    ->when(
+                        ! auth()->user()->can('report.view'),
+                        fn (Builder $q) => $q->whereIn(
+                            'class_id',
+                            auth()->user()->homeroomTeachers()->pluck('class_id')
+                        )
                     )
             )
             ->columns([
@@ -153,10 +167,23 @@ class CetakRapot extends Page implements HasTable
     {
         $sections = $this->filters['sections'] ?? ['cover', 'identitas', 'biodata', 'nilai'];
 
+        $academicYearId = $this->filters['academic_year_id'] ?? $record->academic_year_id;
+        $semesterId = $this->filters['semester_id'] ?? $record->semester_id;
+
+        if (! $academicYearId || ! $semesterId) {
+            Notification::make()
+                ->warning()
+                ->title('Filter Tidak Lengkap')
+                ->body('Pilih Tahun Ajaran dan Semester terlebih dahulu.')
+                ->send();
+
+            return null;
+        }
+
         return app(ReportCardService::class)->generatePdf(
             $record->learner_id,
-            $record->academic_year_id,
-            $record->semester_id,
+            $academicYearId,
+            $semesterId,
             $sections,
         );
     }
@@ -164,6 +191,19 @@ class CetakRapot extends Page implements HasTable
     public function cetakMassal(Collection $records): mixed
     {
         $sections = $this->filters['sections'] ?? ['cover', 'identitas', 'biodata', 'nilai'];
+
+        $academicYearId = $this->filters['academic_year_id'] ?? null;
+        $semesterId = $this->filters['semester_id'] ?? null;
+
+        if (! $academicYearId || ! $semesterId) {
+            Notification::make()
+                ->warning()
+                ->title('Filter Tidak Lengkap')
+                ->body('Pilih Tahun Ajaran dan Semester terlebih dahulu.')
+                ->send();
+
+            return null;
+        }
 
         $learnerIds = $records->pluck('learner_id')->values()->toArray();
 
@@ -181,18 +221,16 @@ class CetakRapot extends Page implements HasTable
 
             return app(ReportCardService::class)->generatePdf(
                 $record->learner_id,
-                $record->academic_year_id,
-                $record->semester_id,
+                $academicYearId,
+                $semesterId,
                 $sections,
             );
         }
 
-        $firstRecord = $records->first();
-
         return app(ReportCardService::class)->generateZip(
             $learnerIds,
-            $firstRecord->academic_year_id,
-            $firstRecord->semester_id,
+            $academicYearId,
+            $semesterId,
             $sections,
         );
     }

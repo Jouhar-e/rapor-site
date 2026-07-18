@@ -188,7 +188,8 @@ class ManageHomeroomNotePivot extends Page implements HasTable
                     ->limit(100)
                     ->searchable(),
             ])
-            ->paginated(false)
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(10)
             ->defaultKeySort(false)
             ->defaultSort('learner_name');
     }

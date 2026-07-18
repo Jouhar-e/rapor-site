@@ -217,7 +217,8 @@ class ManageLearnerExtracurricularPivot extends Page implements HasTable
         return $table
             ->query($this->getTableQuery())
             ->columns($columns)
-            ->paginated(false)
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(10)
             ->defaultKeySort(false)
             ->defaultSort('learner_name');
     }

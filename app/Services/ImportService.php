@@ -10,6 +10,8 @@ use App\Models\Grade;
 use App\Models\HomeroomNote;
 use App\Models\Learner;
 use App\Models\LearnerExtracurricular;
+use App\Models\Subject;
+use App\Models\SubjectGroup;
 use App\Models\Tutor;
 use App\Models\User;
 use App\Services\DTOs\ImportResult;
@@ -56,12 +58,13 @@ class ImportService
             }
 
             $tutor = $this->tutor
-                ->where('nip', $row['nip'])
-                ->orWhere('email', $row['email'])
+                ->where('email', $row['email'])
                 ->first();
 
             if ($tutor) {
-                $tutor->update(collect($row)->except('password')->toArray());
+                $updateData = collect($row)->except('password')->toArray();
+                $updateData['birth_date'] = ! empty($updateData['birth_date']) ? $updateData['birth_date'] : null;
+                $tutor->update($updateData);
                 $tutor->user->update([
                     'name' => $row['name'],
                     'email' => $row['email'],
@@ -86,7 +89,7 @@ class ImportService
                     'name' => $row['name'],
                     'gender' => $row['gender'] ?? 'L',
                     'birth_place' => $row['birth_place'] ?? '',
-                    'birth_date' => $row['birth_date'] ?? null,
+                    'birth_date' => ! empty($row['birth_date']) ? $row['birth_date'] : null,
                     'address' => $row['address'] ?? '',
                     'phone' => $row['phone'] ?? '',
                     'email' => $row['email'],
@@ -141,14 +144,27 @@ class ImportService
 
             $learnerData = collect($row)->except(['class_name'])->toArray();
 
+            foreach (['birth_date', 'admission_date'] as $dateField) {
+                if (empty($learnerData[$dateField])) {
+                    $learnerData[$dateField] = null;
+                }
+            }
+
+            foreach (['child_order'] as $intField) {
+                if (isset($learnerData[$intField]) && ($learnerData[$intField] === '' || $learnerData[$intField] === '-')) {
+                    $learnerData[$intField] = null;
+                }
+            }
+
             if ($class) {
                 $learnerData['program_id'] = $class->program_id;
             }
 
-            $learner = $this->learner
-                ->where('nis', $row['nis'])
-                ->orWhere('nisn', $row['nisn'])
-                ->first();
+            $learner = $this->learner->where('nis', $row['nis'])->first();
+
+            if (! $learner && ! empty($row['nisn'])) {
+                $learner = $this->learner->where('nisn', $row['nisn'])->first();
+            }
 
             if ($learner) {
                 $learner->update($learnerData);
@@ -392,6 +408,13 @@ class ImportService
         foreach ($data as $index => $row) {
             $row['learner_id'] ??= $learners->get($row['nis'] ?? '')?->id;
 
+            if (empty($row['learner_id'])) {
+                $skipped++;
+                $errors[] = ['row' => $index + 1, 'errors' => ['nis' => ["Peserta didik dengan NIS '{$row['nis']}' tidak ditemukan."]]];
+
+                continue;
+            }
+
             $rowErrors = $this->validateRow($row, 'extracurricular');
 
             if (! empty($rowErrors)) {
@@ -415,8 +438,8 @@ class ImportService
                     'semester_id' => $row['semester_id'],
                 ],
                 [
-                    'predicate' => $row['grade'] ?? '',
-                    'description' => $row['notes'] ?? '',
+                    'predicate' => $row['predicate'] ?? $row['grade'] ?? '',
+                    'description' => $row['description'] ?? $row['notes'] ?? '',
                 ],
             );
 
@@ -429,6 +452,79 @@ class ImportService
 
         app(AuditService::class)->logImport('extracurricular', $imported, $updated, $skipped, $errors);
         $this->notifyAdmins('ekstrakurikuler', $imported, $updated);
+
+        return new ImportResult(
+            success: empty($errors),
+            imported: $imported,
+            updated: $updated,
+            skipped: $skipped,
+            errors: $errors,
+        );
+    }
+
+    public function importSubjects(array $data): ImportResult
+    {
+        $imported = 0;
+        $updated = 0;
+        $skipped = 0;
+        $errors = [];
+
+        $subjectGroups = SubjectGroup::pluck('id', 'name');
+
+        foreach ($data as $index => $row) {
+            $rowErrors = $this->validateRow($row, 'subject');
+
+            if (! empty($rowErrors)) {
+                $skipped++;
+                $errors[] = ['row' => $index + 1, 'errors' => $rowErrors];
+
+                continue;
+            }
+
+            $subjectGroupId = null;
+            $subjectGroupName = $row['subject_group_name'] ?? '';
+            if (! empty($subjectGroupName)) {
+                $subjectGroupId = $subjectGroups[$subjectGroupName] ?? null;
+                if (! $subjectGroupId) {
+                    $errors[] = ['row' => $index + 1, 'errors' => ['subject_group' => ["Kelompok '{$subjectGroupName}' tidak ditemukan."]]];
+                    $skipped++;
+
+                    continue;
+                }
+            }
+
+            $subject = Subject::where('code', $row['code'])->first();
+
+            if (! $subject && ! empty($row['class_id']) && ! empty($row['name'])) {
+                $subject = Subject::where('class_id', $row['class_id'])
+                    ->where('name', $row['name'])
+                    ->first();
+            }
+
+            if ($subject) {
+                $subject->update([
+                    'name' => $row['name'],
+                    'class_id' => $row['class_id'] ?? $subject->class_id,
+                    'subject_group_id' => $subjectGroupId ?? $subject->subject_group_id,
+                    'description' => $row['description'] ?? $subject->description,
+                    'is_active' => $row['is_active'] ?? $subject->is_active,
+                ]);
+                $updated++;
+            } else {
+                Subject::create([
+                    'code' => $row['code'],
+                    'name' => $row['name'],
+                    'class_id' => $row['class_id'] ?? null,
+                    'subject_group_id' => $subjectGroupId,
+                    'description' => $row['description'] ?? '',
+                    'is_active' => $row['is_active'] ?? true,
+                ]);
+                $imported++;
+            }
+        }
+
+        app(AuditService::class)->logImport('subject', $imported, $updated, $skipped, $errors);
+        $this->notifyAdmins('mata pelajaran', $imported, $updated);
 
         return new ImportResult(
             success: empty($errors),
@@ -452,7 +548,7 @@ class ImportService
             ],
             'learner' => [
                 'nis' => 'required|string',
-                'nisn' => 'required|string',
+                'nisn' => 'string',
                 'name' => 'required|string',
                 'class_name' => 'string',
             ],
@@ -481,6 +577,10 @@ class ImportService
                 'extracurricular_id' => 'required|integer|exists:extracurriculars,id',
                 'academic_year_id' => 'required|integer|exists:academic_years,id',
                 'semester_id' => 'required|integer|exists:semesters,id',
+            ],
+            'subject' => [
+                'code' => 'required|string',
+                'name' => 'required|string',
             ],
             default => [],
         };
@@ -538,6 +638,9 @@ class ImportService
             'grade' => [
                 'learner_id', 'subject_id', 'academic_year_id', 'semester_id',
                 'task_score', 'pts_score', 'pas_score', 'practice_score',
+            ],
+            'subject' => [
+                'name', 'subject_group', 'description', 'is_active',
             ],
             default => [],
         };

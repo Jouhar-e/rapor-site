@@ -5,13 +5,17 @@ namespace App\Filament\Resources\Classes;
 use App\Filament\Resources\Classes\Pages\ManageClasses;
 use App\Models\Classes;
 use App\Models\Phase;
+use App\Models\Subject;
+use App\Models\SubjectGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -71,6 +75,30 @@ class ClassesResource extends Resource
                     ->label('Keterangan')
                     ->default(null)
                     ->columnSpanFull(),
+                Repeater::make('subjects')
+                    ->relationship('subjects')
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Nama Mata Pelajaran')
+                            ->required()
+                            ->maxLength(255),
+                        TextInput::make('code')
+                            ->label('Kode')
+                            ->required()
+                            ->maxLength(255),
+                        Select::make('subject_group_id')
+                            ->label('Kelompok')
+                            ->options(fn () => SubjectGroup::where('is_active', true)->pluck('name', 'id')),
+                        Textarea::make('description')
+                            ->label('Keterangan')
+                            ->default(null),
+                        Toggle::make('is_active')
+                            ->label('Aktif')
+                            ->default(true),
+                    ])
+                    ->defaultItems(0)
+                    ->addActionLabel('Tambah Mata Pelajaran')
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -119,7 +147,34 @@ class ClassesResource extends Resource
                 //
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->mutateDataUsing(function (array $data): array {
+                        $classNum = '';
+                        preg_match('/(\d+)/', $data['name'] ?? '', $matches);
+                        $classNum = $matches[1] ?? '';
+
+                        $existingCodes = Subject::where('class_id', $data['id'] ?? 0)->pluck('code')->toArray();
+                        $newCodes = [];
+
+                        foreach ($data['subjects'] ?? [] as $key => $subject) {
+                            if (empty($subject['code']) && ! empty($subject['name'])) {
+                                $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $subject['name']), 0, 3));
+                                $baseCode = $prefix.($classNum ? '-'.$classNum : '');
+
+                                $code = $baseCode;
+                                $counter = 1;
+                                while (in_array($code, $existingCodes) || in_array($code, $newCodes)) {
+                                    $code = $baseCode.'_'.$counter;
+                                    $counter++;
+                                }
+                                $newCodes[] = $code;
+
+                                $data['subjects'][$key]['code'] = $code;
+                            }
+                        }
+
+                        return $data;
+                    }),
                 DeleteAction::make()
                     ->before(function (DeleteAction $action, Classes $record) {
                         if ($record->classLearners()->count() > 0) {

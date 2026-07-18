@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Subjects\Pages;
 
+use App\Filament\Pages\ImportSubject;
 use App\Filament\Resources\Subjects\SubjectResource;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
 
@@ -13,6 +15,11 @@ class ManageSubjects extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('import')
+                ->label('Import Mata Pelajaran')
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('gray')
+                ->url(fn (): string => ImportSubject::getUrl()),
             CreateAction::make(),
         ];
     }

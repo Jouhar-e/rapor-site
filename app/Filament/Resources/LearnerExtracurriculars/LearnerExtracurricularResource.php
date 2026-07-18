@@ -6,6 +6,7 @@ use App\Filament\Resources\LearnerExtracurriculars\Pages\ManageLearnerExtracurri
 use App\Filament\Resources\LearnerExtracurriculars\Pages\ManageLearnerExtracurriculars;
 use App\Models\ClassLearner;
 use App\Models\HomeroomTeacher;
+use App\Models\Learner;
 use App\Models\LearnerExtracurricular;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -55,12 +56,13 @@ class LearnerExtracurricularResource extends Resource
             if ($classIds->isNotEmpty()) {
                 $learnerIds = ClassLearner::whereIn('class_id',
                     $classIds)->pluck('learner_id');
-                returnLearner::whereIn('id',
+
+                return Learner::whereIn('id',
                     $learnerIds)->pluck('name',
                         'id')->toArray();
 
             }if ($user->hasRole('admin')) {
-                returnLearner::pluck('name',
+                return Learner::pluck('name',
                     'id')->toArray();
 
             }

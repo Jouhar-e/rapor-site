@@ -32,7 +32,7 @@ class NotificationService
             'type' => $type,
             'notifiable_id' => $notifiable->getKey(),
             'notifiable_type' => $notifiable->getMorphClass(),
-            'data' => $data,
+            'data' => json_encode($data),
             'read_at' => null,
         ]);
     }
