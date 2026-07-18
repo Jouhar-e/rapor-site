@@ -1,6 +1,6 @@
 # PKBM Academic Information System (Rapor Site)
 
-Laravel 13 + Filament 5 admin panel untuk program PKBM (Paket A/B/C). ~22 Resource, ~19 Page, ~11 Service.
+Laravel 13 + Filament 5 admin panel untuk program PKBM (Paket A/B/C). 21 Resource, 14 standalone Page, 10 Service.
 
 ## Stack
 
@@ -30,6 +30,7 @@ Laravel 13 + Filament 5 admin panel untuk program PKBM (Paket A/B/C). ~22 Resour
 | Lihat routes | `php artisan route:list` |
 | Rebuild DB + seeder | `php artisan migrate:fresh --seed` |
 | Install Chrome untuk PDF | `npx puppeteer browsers install chrome@stable` |
+| Push | `git push origin main` |
 
 ## Konfigurasi Kunci
 
@@ -37,6 +38,7 @@ Laravel 13 + Filament 5 admin panel untuk program PKBM (Paket A/B/C). ~22 Resour
 - **`.env`** — APP_KEY sudah set, DB MySQL, session/queue/cache pakai `database` driver.
 - **`resources/css/app.css`** — Tailwind v4 (`@import 'tailwindcss'`), BUKAN v3 (`@tailwind`).
 - **Routes**: `routes/web.php` cuma 4 route template-download. Selebihnya di-handle Filament.
+- **`$shouldRegisterNavigation = false`** — semua `ImportXxx` dan `ExportGrade` disembunyikan dari sidebar, diakses via URL/tombol dari resource.
 
 ## Dependencies Penting
 
@@ -46,14 +48,14 @@ Laravel 13 + Filament 5 admin panel untuk program PKBM (Paket A/B/C). ~22 Resour
 
 ## Arsitektur
 
-- **Filament Panel**: `app/Providers/Filament/AdminPanelProvider.php` — nav group (`Akademik`, `Master Data`, `Laporan`, `Sistem`), warna Amber, font Instrument Sans, sidebar collapsible.
+- **Filament Panel**: `app/Providers/Filament/AdminPanelProvider.php` — nav group (`Akademik`, `Master Data`, `Laporan`, `Sistem`), warna Biru (Blue), font Instrument Sans, sidebar collapsible.
 - **Resource** di `app/Filament/Resources/` — masing-masing punya table, form, dan 1+ page.
 - **Tipe Page**:
   - `ManageXxx` — CRUD langsung dari Resource.
-  - `ImportXxx` — upload XLSX + preview + import massal. XLSX-only.
-  - `ExportGrade` — export nilai per subject ke XLSX.
-  - `ReportXxx` — form filter + export table, hanya admin.
-  - `CetakRapot` — filter kelas/semester + generate PDF via Browsershot.
+  - `ImportXxx` — upload XLSX + preview + import massal. XLSX-only. Tidak muncul di sidebar.
+  - `ExportGrade` — export nilai per subject ke XLSX. Tidak muncul di sidebar.
+  - `ReportXxx` / `CetakRapot` — form filter + export, hanya admin.
+  - `Login` — custom login page dengan error message detail (akun tidak ditemukan / password salah / tidak punya akses).
   - `PromotionWizard` — wizard multi-step untuk kenaikan kelas.
 - **Services** di `app/Services/`:
   - `ExcelService.php` — generasi XLSX
@@ -62,7 +64,6 @@ Laravel 13 + Filament 5 admin panel untuk program PKBM (Paket A/B/C). ~22 Resour
   - `GradeService.php`, `AttendanceService.php`, `PromotionService.php` — logika domain
   - `DashboardService.php` — statistik/chart
   - `BackupService.php`, `AuditService.php`, `NotificationService.php` — utilitas
-
 - **Model** di `app/Models/` — Eloquent model, relasi, scope, accessor.
 - **Permissions**: Spatie Laravel Permission, role `admin` (semua) dan `tutor` (terbatas: CRUD grade/attendance/extracurricular/homeroom-note + import). Laporan hanya admin.
 
@@ -82,23 +83,32 @@ Users (sort=0) → AuditLogs (1) → BackupHistories (2) → GradePredicates (3)
 
 ## Gotcha Kritis
 
-### Filter + refresh table di Page-based Resource
+### Filter + refresh table — dua pola berbeda
 
-Semua Page filter-form (`ReportXxx`, `CetakRapot`, `ManageGradePivot`) pakai `statePath('filters')` + `InteractsWithTable`. Setiap filter Select WAJIB punya:
-
+**Pola 1** (`statePath('filters')` — ReportTutors, ReportLearners, CetakRapot, ManageGradePivot):
 ```php
 Select::make('semester_id')
     ->reactive()
     ->afterStateUpdated(fn () => $this->resetTable()),
 ```
-
-Juga tambahkan Livewire hook sebagai fallback:
+Ditambah fallback Livewire hook:
 ```php
-public function updated($propertyName): void
-{
-    $this->resetTable();
-}
+public function updated($propertyName): void { $this->resetTable(); }
 ```
+
+**Pola 2** (component-bound state — ReportGrades, ReportAttendances, ReportExtracurriculars):
+```php
+public ?int $semester_id = null;
+// ...
+Select::make('semester_id')
+    ->live()
+    ->afterStateUpdated(fn () => $this->updatedSemesterId()),
+public function updatedSemesterId(): void { $this->resetTable(); }
+```
+
+### `when($value, fn)` vs `filled($value)`
+
+Di Filter Scout / SelectFilter, `$state = ['value' => null]` bukan null — pakai `filled($state['value'] ?? null)`. PHP anggap `'0'` sebagai falsy — pakai `filled($value)` bukan `when($value, fn)`.
 
 ### Browsershot / Chrome PDF
 
@@ -113,15 +123,22 @@ Semua import pakai **PhpSpreadsheet `IOFactory`** untuk parse `.xlsx`. Export pa
 
 ### Model Learner tidak punya `semester_id` / `academic_year_id`
 
-Tabel `learners` tidak punya kolom `semester_id`. Filter learner berdasarkan semester/tahun ajaran via `classLearners`:
-
+Tabel `learners` tidak punya kolom semester. Filter berdasarkan semester/tahun ajaran via `classLearners`:
 ```php
 ->whereHas('classLearners', fn (Builder $q) => $q->where('semester_id', $v))
 ```
 
+### Policy auto-discovery
+
+Laravel Gate auto-mencari policy berdasarkan nama model (e.g. `Phase` → `PhasePolicy`). Jika file policy dihapus tanpa registrasi, error `Failed to open stream`. Solusi: hapus model atau daftarkan di `AuthServiceProvider::$policies`.
+
+### Migration ordering
+
+4 migration `fix`/`add` berjalan sebelum `create` table migration karena timestamp. Dilindungi dengan `Schema::hasTable()` guard. Jangan copy pattern ini — di Laravel 13 migration baru pakai timestamp manual.
+
 ### Database
 
-40+ migration. `php artisan migrate:fresh --seed` untuk rebuild. Seeder bikin user `admin@pkbm.test` / `tutor@pkbm.test`.
+Seeder bikin user `admin@pkbm.test` / `tutor@pkbm.test`. `php artisan migrate:fresh --seed` untuk rebuild.
 
 ## Konvensi Testing
 

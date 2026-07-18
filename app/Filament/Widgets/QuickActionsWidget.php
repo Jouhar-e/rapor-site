@@ -39,7 +39,7 @@ class QuickActionsWidget extends Widget
                     'label' => 'Cetak Rapor',
                     'description' => 'Generate laporan rapor',
                     'icon' => 'heroicon-o-printer',
-                    'url' => route('filament.admin.pages.report-grades'),
+                    'url' => route('filament.admin.pages.cetak-rapot'),
                     'color' => 'warning',
                 ],
                 [

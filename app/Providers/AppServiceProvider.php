@@ -24,6 +24,7 @@ use App\Models\Tutor;
 use App\Models\User;
 use App\Observers\AuditLogObserver;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -60,5 +61,6 @@ class AppServiceProvider extends ServiceProvider
         foreach ($models as $model) {
             $model::observe(AuditLogObserver::class);
         }
+        URL::forceScheme('https');
     }
 }
