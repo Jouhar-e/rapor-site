@@ -20,10 +20,10 @@ class PromotionService
     public function getActiveClasses(AcademicYear $year): Collection
     {
         return Classes::query()
-            ->whereHas('classLearners', function ($query) use ($year): void {
-                $query->where('academic_year_id', $year->id);
-            })
-            ->orWhere('status', 'aktif')
+            ->where(fn ($q) => $q
+                ->whereHas('classLearners', fn ($sq) => $sq->where('academic_year_id', $year->id))
+                ->orWhere('status', 'aktif')
+            )
             ->orderBy('name')
             ->get();
     }

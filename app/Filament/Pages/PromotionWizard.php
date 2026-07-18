@@ -201,20 +201,16 @@ class PromotionWizard extends Page
 
     public function getDestinationClassOptions(?int $academicYearId): array
     {
-        if (! $academicYearId) {
-            return [];
+        $query = Classes::query()->orderBy('name');
+
+        if ($academicYearId) {
+            $query->where(function ($q) use ($academicYearId): void {
+                $q->whereHas('classLearners', fn ($sq) => $sq->where('academic_year_id', $academicYearId))
+                    ->orWhere('status', 'aktif');
+            });
         }
 
-        return Classes::query()
-            ->where(function ($query) use ($academicYearId): void {
-                $query->whereHas('classLearners', function ($q) use ($academicYearId): void {
-                    $q->where('academic_year_id', $academicYearId);
-                })
-                    ->orWhere('status', 'aktif');
-            })
-            ->orderBy('name')
-            ->pluck('name', 'id')
-            ->toArray();
+        return $query->pluck('name', 'id')->toArray();
     }
 
     public function generatePreview(): void
