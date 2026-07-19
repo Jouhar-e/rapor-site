@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Subjects;
 
-use App\Filament\Imports\SubjectImporter;
 use App\Filament\Resources\Subjects\Pages\ManageSubjects;
 use App\Models\Subject;
 use App\Models\SubjectGroup;
@@ -10,7 +9,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ImportAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -83,8 +81,7 @@ class SubjectResource extends Resource
             ->columns([
                 TextColumn::make('classes.name')
                     ->label('Kelas')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
                 TextColumn::make('subjectGroup.name')
                     ->label('Kelompok')
                     ->searchable(),
@@ -109,6 +106,7 @@ class SubjectResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                //
             ])
             ->recordActions([
                 EditAction::make(),
@@ -127,8 +125,6 @@ class SubjectResource extends Resource
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    ImportAction::make(SubjectImporter::class)
-                        ->label('Import'),
                     DeleteBulkAction::make()
                         ->before(function (DeleteBulkAction $action, $records) {
                             foreach ($records as $record) {
