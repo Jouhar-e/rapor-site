@@ -11,6 +11,7 @@ use App\Services\ExcelService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -25,6 +26,7 @@ use UnitEnum;
 
 class ReportAttendances extends Page implements HasTable
 {
+    use InteractsWithForms;
     use InteractsWithTable;
 
     protected static ?string $title = 'Laporan Presensi';
@@ -39,29 +41,36 @@ class ReportAttendances extends Page implements HasTable
 
     protected string $view = 'filament.pages.report-attendances';
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            route('filament.admin.pages.dashboard') => 'Beranda',
+            'Laporan',
+            'Laporan Presensi',
+        ];
+    }
+
     public static function canAccess(): bool
     {
         return auth()->user()->can('report.view');
     }
 
-    public ?int $class_id = null;
-
-    public ?int $academic_year_id = null;
-
-    public ?int $semester_id = null;
+    public ?array $filters = [];
 
     public function mount(): void
     {
         $activeYear = AcademicYear::where('is_active', true)->where('is_archived', false)->first();
-        $this->academic_year_id = $activeYear?->id;
-
         $activeSemester = $activeYear
             ? Semester::where('academic_year_id', $activeYear->id)->where('is_active', true)->first()
             : null;
-        $this->semester_id = $activeSemester?->id;
+
+        $this->form->fill([
+            'academic_year_id' => $activeYear?->id,
+            'semester_id' => $activeSemester?->id,
+        ]);
     }
 
-    public function filterForm(Schema $schema): Schema
+    public function form(Schema $schema): Schema
     {
         return $schema
             ->components([
@@ -70,17 +79,24 @@ class ReportAttendances extends Page implements HasTable
                     ->options(Classes::pluck('name', 'id'))
                     ->placeholder('Semua Kelas')
                     ->live()
-                    ->afterStateUpdated(fn () => $this->updatedClassId()),
+                    ->afterStateUpdated(function (callable $set) {
+                        $set('academic_year_id', null);
+                        $set('semester_id', null);
+                        $this->resetTable();
+                    }),
                 Select::make('academic_year_id')
                     ->label('Tahun Ajaran')
                     ->options(fn () => AcademicYear::where('is_archived', false)->pluck('name', 'id'))
                     ->placeholder('Semua Tahun Ajaran')
                     ->live()
-                    ->afterStateUpdated(fn () => $this->updatedAcademicYearId()),
+                    ->afterStateUpdated(function (callable $set) {
+                        $set('semester_id', null);
+                        $this->resetTable();
+                    }),
                 Select::make('semester_id')
                     ->label('Semester')
-                    ->options(fn () => $this->academic_year_id
-                        ? Semester::where('academic_year_id', $this->academic_year_id)
+                    ->options(fn (callable $get) => $get('academic_year_id')
+                        ? Semester::where('academic_year_id', $get('academic_year_id'))
                             ->whereHas('academicYear', fn ($q) => $q->where('is_archived', false))
                             ->pluck('name', 'id')
                         : Semester::whereHas('academicYear', fn ($q) => $q->where('is_archived', false))
@@ -88,8 +104,16 @@ class ReportAttendances extends Page implements HasTable
                     )
                     ->placeholder('Semua Semester')
                     ->live()
-                    ->afterStateUpdated(fn () => $this->updatedSemesterId()),
-            ]);
+                    ->afterStateUpdated(fn () => $this->resetTable()),
+            ])
+            ->statePath('filters');
+    }
+
+    public function updated($propertyName): void
+    {
+        if (str_starts_with($propertyName, 'filters.')) {
+            $this->resetTable();
+        }
     }
 
     public function table(Table $table): Table
@@ -134,13 +158,14 @@ class ReportAttendances extends Page implements HasTable
                 Action::make('exportExcel')
                     ->label('Ekspor Excel')
                     ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
                     ->action(fn () => $this->exportExcel()),
             ]);
     }
 
     protected function getTableQuery(): Builder
     {
-        $classIds = $this->class_id ? [$this->class_id] : Classes::pluck('id')->toArray();
+        $classIds = $this->filters['class_id'] ? [$this->filters['class_id']] : Classes::pluck('id')->toArray();
 
         $sub = DB::table('attendances', 'a')
             ->select(
@@ -161,8 +186,8 @@ class ReportAttendances extends Page implements HasTable
                     ->whereColumn('cl.academic_year_id', '=', 'a.academic_year_id');
             })
             ->leftJoin('classes as c', 'c.id', '=', 'cl.class_id')
-            ->when($this->academic_year_id, fn ($q, $v) => $q->where('a.academic_year_id', $v))
-            ->when($this->semester_id, fn ($q, $v) => $q->where('a.semester_id', $v))
+            ->when($this->filters['academic_year_id'] ?? null, fn ($q, $v) => $q->where('a.academic_year_id', $v))
+            ->when($this->filters['semester_id'] ?? null, fn ($q, $v) => $q->where('a.semester_id', $v))
             ->where('ay.is_archived', false)
             ->when(! empty($classIds), function ($q) use ($classIds) {
                 $learnerIds = ClassLearner::whereIn('class_id', $classIds)->pluck('learner_id');
@@ -186,7 +211,7 @@ class ReportAttendances extends Page implements HasTable
 
     public function exportExcel(): StreamedResponse
     {
-        $classIds = $this->class_id ? [$this->class_id] : Classes::pluck('id')->toArray();
+        $classIds = $this->filters['class_id'] ? [$this->filters['class_id']] : Classes::pluck('id')->toArray();
 
         $rows = DB::table('attendances', 'a')
             ->select(
@@ -207,8 +232,8 @@ class ReportAttendances extends Page implements HasTable
                     ->whereColumn('cl.academic_year_id', '=', 'a.academic_year_id');
             })
             ->leftJoin('classes as c', 'c.id', '=', 'cl.class_id')
-            ->when($this->academic_year_id, fn ($q, $v) => $q->where('a.academic_year_id', $v))
-            ->when($this->semester_id, fn ($q, $v) => $q->where('a.semester_id', $v))
+            ->when($this->filters['academic_year_id'] ?? null, fn ($q, $v) => $q->where('a.academic_year_id', $v))
+            ->when($this->filters['semester_id'] ?? null, fn ($q, $v) => $q->where('a.semester_id', $v))
             ->where('ay.is_archived', false)
             ->when(! empty($classIds), function ($q) use ($classIds) {
                 $learnerIds = ClassLearner::whereIn('class_id', $classIds)->pluck('learner_id');
@@ -230,23 +255,5 @@ class ReportAttendances extends Page implements HasTable
             (int) $row->total_permission,
             (int) $row->total_absent,
         ]);
-    }
-
-    public function updatedAcademicYearId(): void
-    {
-        $this->semester_id = null;
-        $this->resetTable();
-    }
-
-    public function updatedSemesterId(): void
-    {
-        $this->resetTable();
-    }
-
-    public function updatedClassId(): void
-    {
-        $this->academic_year_id = null;
-        $this->semester_id = null;
-        $this->resetTable();
     }
 }

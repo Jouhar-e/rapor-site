@@ -48,7 +48,7 @@ class ManageAttendancePivot extends Page implements HasTable
                 ->label('Ekspor Presensi')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action('exportPivot')
-                ->color('gray'),
+                ->color('success'),
         ];
     }
 

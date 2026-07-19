@@ -20,7 +20,7 @@ class ManageTutors extends ManageRecords
                 ->label('Import Tutor')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->url(fn (): string => route('filament.admin.pages.import-tutor'))
-                ->color('gray'),
+                ->color('primary'),
             CreateAction::make()
                 ->mutateDataUsing(function (array $data): array {
                     $user = User::create([

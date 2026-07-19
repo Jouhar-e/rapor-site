@@ -36,6 +36,15 @@ class ReportPromotions extends Page implements HasTable
 
     protected string $view = 'filament.pages.report-promotions';
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            route('filament.admin.pages.dashboard') => 'Beranda',
+            'Laporan',
+            'Laporan Kenaikan Kelas',
+        ];
+    }
+
     public static function canAccess(): bool
     {
         return auth()->user()->can('report.view');
@@ -91,6 +100,7 @@ class ReportPromotions extends Page implements HasTable
                 Action::make('exportCsv')
                     ->label('Ekspor Excel')
                     ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
                     ->action(fn () => $this->exportCsv()),
             ]);
     }

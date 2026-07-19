@@ -25,6 +25,15 @@ class ManageGradingSettings extends Page
 
     protected string $view = 'filament.pages.manage-grading-settings';
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            route('filament.admin.pages.dashboard') => 'Beranda',
+            'Sistem',
+            'Pengaturan Penilaian',
+        ];
+    }
+
     public static function canAccess(): bool
     {
         return auth()->user()->can('setting.view');

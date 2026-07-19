@@ -55,7 +55,7 @@ class ManageGradePivot extends Page implements HasTable
                 ->label('Ekspor Nilai')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action('exportPivot')
-                ->color('gray'),
+                ->color('success'),
         ];
     }
 

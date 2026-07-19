@@ -50,7 +50,7 @@ class ManageHomeroomNotePivot extends Page implements HasTable
                 ->label('Ekspor Catatan')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action('exportPivot')
-                ->color('gray'),
+                ->color('success'),
         ];
     }
 

@@ -21,7 +21,7 @@ class ManageLearners extends ManageRecords
                 ->label('Import Peserta Didik')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->url(fn (): string => route('filament.admin.pages.import-learner'))
-                ->color('gray'),
+                ->color('primary'),
             CreateAction::make()
                 ->using(function (array $data, string $model): Model {
                     $classId = $data['class_id'];

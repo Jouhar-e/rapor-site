@@ -23,7 +23,7 @@ class ManageAttendances extends ManageRecords
                 ->label('Import Presensi')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->url(fn (): string => route('filament.admin.pages.import-attendance'))
-                ->color('gray'),
+                ->color('primary'),
             CreateAction::make(),
         ];
     }

@@ -23,7 +23,7 @@ class ManageHomeroomNotes extends ManageRecords
                 ->label('Import Catatan')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->url(fn (): string => route('filament.admin.pages.import-homeroom-note'))
-                ->color('gray'),
+                ->color('primary'),
             CreateAction::make(),
         ];
     }

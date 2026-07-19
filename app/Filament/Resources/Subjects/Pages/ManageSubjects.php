@@ -18,7 +18,7 @@ class ManageSubjects extends ManageRecords
             Action::make('import')
                 ->label('Import Mata Pelajaran')
                 ->icon('heroicon-o-arrow-up-tray')
-                ->color('gray')
+                ->color('primary')
                 ->url(fn (): string => ImportSubject::getUrl()),
             CreateAction::make(),
         ];

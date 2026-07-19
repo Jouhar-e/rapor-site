@@ -27,6 +27,15 @@ class ManageSchoolProfile extends Page
 
     protected string $view = 'filament.pages.manage-school-profile';
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            route('filament.admin.pages.dashboard') => 'Beranda',
+            'Sistem',
+            'Profil Sekolah',
+        ];
+    }
+
     public static function canAccess(): bool
     {
         return auth()->user()->can('setting.view');

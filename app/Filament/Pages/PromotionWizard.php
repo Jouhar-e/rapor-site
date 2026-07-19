@@ -38,6 +38,15 @@ class PromotionWizard extends Page
 
     protected string $view = 'filament.pages.promotion-wizard';
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            route('filament.admin.pages.dashboard') => 'Beranda',
+            'Akademik',
+            'Kenaikan Kelas',
+        ];
+    }
+
     public static function canAccess(): bool
     {
         return auth()->user()->can('promotion.view');

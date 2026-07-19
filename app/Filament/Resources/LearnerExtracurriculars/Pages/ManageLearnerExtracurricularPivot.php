@@ -54,7 +54,7 @@ class ManageLearnerExtracurricularPivot extends Page implements HasTable
                 ->label('Ekspor Nilai Ekstrakurikuler')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action('exportExtracurricularPivot')
-                ->color('gray'),
+                ->color('success'),
         ];
     }
 

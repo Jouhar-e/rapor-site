@@ -23,7 +23,7 @@ class ManageLearnerExtracurriculars extends ManageRecords
             Action::make('import')
                 ->label('Import Nilai Ekstrakurikuler')
                 ->icon('heroicon-o-arrow-up-tray')
-                ->color('gray')
+                ->color('primary')
                 ->url(fn (): string => ImportExtracurricular::getUrl()),
             CreateAction::make(),
         ];

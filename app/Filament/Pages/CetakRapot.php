@@ -42,6 +42,15 @@ class CetakRapot extends Page implements HasTable
 
     protected string $view = 'filament.pages.cetak-rapot';
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            route('filament.admin.pages.dashboard') => 'Beranda',
+            'Akademik',
+            'Cetak Rapot',
+        ];
+    }
+
     public static function canAccess(): bool
     {
         $user = auth()->user();
