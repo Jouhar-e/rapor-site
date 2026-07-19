@@ -146,12 +146,15 @@ class AcademicYearResource extends Resource
                         }
                     }),
             ])
+            ->emptyStateHeading('Belum ada tahun ajaran')
+            ->emptyStateDescription('Belum ada tahun ajaran yang terdaftar.')
+            ->emptyStateIcon('heroicon-o-calendar')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function (DeleteBulkAction $action, $records) {
                             foreach ($records as $record) {
-                                if ($record->semesters()->count() > 0 || $record->grades()->count() > 0 || $record->attendances()->count() > 0 || $record->classLearners()->count() > 0) {
+                                if ($record->semesters()->count() > 0 || $record->classLearners()->count() > 0 || $record->grades()->count() > 0 || $record->homeroomTeachers()->count() > 0) {
                                     Notification::make()
                                         ->warning()
                                         ->title('Tidak dapat menghapus')

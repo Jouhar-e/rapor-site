@@ -231,6 +231,9 @@ class ClassesResource extends Resource
                         }
                     }),
             ])
+            ->emptyStateHeading('Belum ada kelas')
+            ->emptyStateDescription('Belum ada kelas yang terdaftar. Silakan buat kelas baru.')
+            ->emptyStateIcon('heroicon-o-building-library')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

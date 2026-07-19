@@ -95,6 +95,9 @@ class SubjectGroupResource extends Resource
                 EditAction::make(),
                 DeleteAction::make(),
             ])
+            ->emptyStateHeading('Belum ada kelompok mapel')
+            ->emptyStateDescription('Belum ada kelompok mata pelajaran yang terdaftar.')
+            ->emptyStateIcon('heroicon-o-rectangle-stack')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

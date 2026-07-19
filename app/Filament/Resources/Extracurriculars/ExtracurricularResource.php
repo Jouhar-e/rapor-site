@@ -104,6 +104,9 @@ class ExtracurricularResource extends Resource
                         }
                     }),
             ])
+            ->emptyStateHeading('Belum ada ekstrakurikuler')
+            ->emptyStateDescription('Belum ada kegiatan ekstrakurikuler yang terdaftar.')
+            ->emptyStateIcon('heroicon-o-star')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

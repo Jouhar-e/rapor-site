@@ -119,6 +119,9 @@ class HomeroomNoteResource extends Resource
                 EditAction::make(),
                 DeleteAction::make(),
             ])
+            ->emptyStateHeading('Belum ada catatan')
+            ->emptyStateDescription('Belum ada catatan wali kelas.')
+            ->emptyStateIcon('heroicon-o-document-text')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

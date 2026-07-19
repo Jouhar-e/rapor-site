@@ -125,6 +125,9 @@ class SemesterResource extends Resource
                         }
                     }),
             ])
+            ->emptyStateHeading('Belum ada semester')
+            ->emptyStateDescription('Belum ada semester yang terdaftar.')
+            ->emptyStateIcon('heroicon-o-book-open')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

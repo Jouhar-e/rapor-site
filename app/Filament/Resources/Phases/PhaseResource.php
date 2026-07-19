@@ -94,6 +94,9 @@ class PhaseResource extends Resource
                 EditAction::make(),
                 DeleteAction::make(),
             ])
+            ->emptyStateHeading('Belum ada fase')
+            ->emptyStateDescription('Belum ada fase yang terdaftar.')
+            ->emptyStateIcon('heroicon-o-layer-group')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

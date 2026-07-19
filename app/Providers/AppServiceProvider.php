@@ -23,8 +23,9 @@ use App\Models\Subject;
 use App\Models\Tutor;
 use App\Models\User;
 use App\Observers\AuditLogObserver;
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,6 +36,16 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        try {
+            if (Schema::hasTable('school_profiles')) {
+                $school = SchoolProfile::first();
+                if ($school?->name) {
+                    config(['app.name' => $school->name]);
+                }
+            }
+        } catch (\Throwable) {
+        }
+
         $models = [
             AcademicYear::class,
             Attendance::class,

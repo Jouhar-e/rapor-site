@@ -163,6 +163,9 @@ class AttendanceResource extends Resource
                 EditAction::make(),
                 DeleteAction::make(),
             ])
+            ->emptyStateHeading('Belum ada absensi')
+            ->emptyStateDescription('Belum ada data absensi yang tercatat.')
+            ->emptyStateIcon('heroicon-o-clipboard-document-list')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

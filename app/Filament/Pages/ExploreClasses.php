@@ -14,7 +14,7 @@ use UnitEnum;
 
 class ExploreClasses extends Page
 {
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-sitemap';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected string $view = 'filament.pages.explore-classes';
 
@@ -36,13 +36,8 @@ class ExploreClasses extends Page
 
     public int $totalLearners = 0;
 
-    public function getBreadcrumbs(): array
-    {
-        return [
-            'Master Data' => null,
-            'Jelajahi Kelas' => null,
-        ];
-    }
+    // INI ADALAH VARIABEL YANG MEMBUAT ERROR JIKA TIDAK ADA DI SERVER
+    public bool $expandAll = false;
 
     public function mount(): void
     {
@@ -82,12 +77,14 @@ class ExploreClasses extends Page
                         ->orderBy('name', 'desc')
                         ->pluck('name', 'id'))
                     ->afterStateUpdated(fn () => null),
+
                 Select::make('program_id')
                     ->label('Program')
                     ->placeholder('Semua Program')
                     ->live()
                     ->options(fn () => Program::where('is_active', true)->pluck('name', 'id'))
                     ->afterStateUpdated(fn () => null),
+
                 Select::make('class_id')
                     ->label('Kelas')
                     ->placeholder('Semua Kelas')
@@ -102,6 +99,11 @@ class ExploreClasses extends Page
 
     public function buildTree(): void
     {
+        // === TAMBAHKAN DUA BARIS INI UNTUK MERESET ANGKA ===
+        $this->totalClasses = 0;
+        $this->totalLearners = 0;
+        // ====================================================
+
         $years = AcademicYear::where('is_archived', false)
             ->orderBy('name', 'desc')
             ->when($this->academic_year_id, fn ($q) => $q->where('id', $this->academic_year_id))
@@ -143,6 +145,7 @@ class ExploreClasses extends Page
                     'learners' => $learners,
                 ];
 
+                // Proses penjumlahan angka
                 $this->totalLearners += $learners->count();
                 $this->totalClasses++;
             }

@@ -307,6 +307,9 @@ class GradeResource extends Resource
                 DeleteAction::make()
                     ->visible(fn () => auth()->check()),
             ])
+            ->emptyStateHeading('Belum ada nilai')
+            ->emptyStateDescription('Belum ada data nilai yang tercatat.')
+            ->emptyStateIcon('heroicon-o-document-text')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

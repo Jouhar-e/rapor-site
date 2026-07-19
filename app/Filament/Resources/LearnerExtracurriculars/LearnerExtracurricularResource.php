@@ -131,6 +131,9 @@ class LearnerExtracurricularResource extends Resource
                 EditAction::make(),
                 DeleteAction::make(),
             ])
+            ->emptyStateHeading('Belum ada peserta ekstrakurikuler')
+            ->emptyStateDescription('Belum ada warga belajar yang terdaftar di ekstrakurikuler.')
+            ->emptyStateIcon('heroicon-o-star')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

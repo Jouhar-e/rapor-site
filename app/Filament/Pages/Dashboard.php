@@ -2,9 +2,11 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\AcademicTimelineWidget;
 use App\Filament\Widgets\AdminCharts;
 use App\Filament\Widgets\AdminStatsCardsWidget;
 use App\Filament\Widgets\GradeDistributionChart;
+use App\Filament\Widgets\GradeStatusWidget;
 use App\Filament\Widgets\ProgressAbsensiWidget;
 use App\Filament\Widgets\ProgressNilaiWidget;
 use App\Filament\Widgets\QuickActionsWidget;
@@ -49,6 +51,8 @@ class Dashboard extends BaseDashboard
         return [
             WelcomeWidget::class,
             AdminStatsCardsWidget::class,
+            AcademicTimelineWidget::class,
+            GradeStatusWidget::class,
             ProgressNilaiWidget::class,
             ProgressAbsensiWidget::class,
             AdminCharts::class,

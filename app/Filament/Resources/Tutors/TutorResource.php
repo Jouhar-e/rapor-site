@@ -198,6 +198,9 @@ class TutorResource extends Resource
                     })
                     ->modalSubmitActionLabel('Ya, hapus'),
             ])
+            ->emptyStateHeading('Belum ada tutor')
+            ->emptyStateDescription('Belum ada tutor yang terdaftar. Silakan tambah data tutor baru.')
+            ->emptyStateIcon('heroicon-o-users')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

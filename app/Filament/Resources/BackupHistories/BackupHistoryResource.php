@@ -127,6 +127,9 @@ class BackupHistoryResource extends Resource
                     }),
                 DeleteAction::make(),
             ])
+            ->emptyStateHeading('Belum ada backup')
+            ->emptyStateDescription('Belum ada riwayat backup sistem.')
+            ->emptyStateIcon('heroicon-o-circle-stack')
             ->toolbarActions([
                 Action::make('backupNow')
                     ->label('Backup Sekarang')

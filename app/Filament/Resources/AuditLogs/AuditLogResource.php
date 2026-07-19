@@ -88,7 +88,10 @@ class AuditLogResource extends Resource
             ])
             ->filters([
                 //
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada aktivitas')
+            ->emptyStateDescription('Belum ada log aktivitas yang tercatat.')
+            ->emptyStateIcon('heroicon-o-bolt');
     }
 
     public static function getPages(): array

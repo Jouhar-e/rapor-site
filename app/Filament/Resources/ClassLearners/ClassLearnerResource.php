@@ -75,6 +75,9 @@ class ClassLearnerResource extends Resource
                 EditAction::make(),
                 DeleteAction::make(),
             ])
+            ->emptyStateHeading('Belum ada peserta kelas')
+            ->emptyStateDescription('Belum ada warga belajar yang terdaftar di kelas ini.')
+            ->emptyStateIcon('heroicon-o-user-group')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

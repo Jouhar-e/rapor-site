@@ -120,12 +120,15 @@ class ProgramResource extends Resource
                         }
                     }),
             ])
+            ->emptyStateHeading('Belum ada program')
+            ->emptyStateDescription('Belum ada program yang terdaftar.')
+            ->emptyStateIcon('heroicon-o-academic-cap')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function (DeleteBulkAction $action, $records) {
                             foreach ($records as $record) {
-                                if ($record->learners()->count() > 0 || $record->classes()->count() > 0 || $record->subjects()->count() > 0) {
+                                if ($record->classes()->count() > 0 || $record->learners()->count() > 0) {
                                     Notification::make()
                                         ->warning()
                                         ->title('Tidak dapat menghapus')

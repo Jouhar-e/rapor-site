@@ -1,119 +1,105 @@
 <x-filament-panels::page>
-    <div class="mb-6">
+    {{-- Bagian Filter --}}
+    <x-filament::section icon="heroicon-o-funnel" heading="Filter Pencarian"
+        description="Saring data kelas berdasarkan kriteria di bawah ini." class="mb-6">
         {{ $this->filterForm }}
-    </div>
+    </x-filament::section>
 
     @if (blank($this->treeData))
-        <x-filament::empty-state
-            heading="Tidak ada data"
-            description="Belum ada kelas dengan peserta didik untuk pengaturan filter saat ini."
-        />
+        <x-filament::empty-state heading="Tidak ada data kelas"
+            description="Belum ada kelas atau peserta didik yang cocok dengan kriteria filter Anda saat ini."
+            icon="heroicon-o-x-circle" />
     @else
-        <div x-data="{ expandedAll: false }" class="space-y-2">
-            <div class="flex gap-2 mb-4">
-                <x-filament::button
-                    size="xs"
-                    color="gray"
-                    x-on:click="expandedAll = true"
-                >
-                    Buka Semua
-                </x-filament::button>
-                <x-filament::button
-                    size="xs"
-                    color="gray"
-                    x-on:click="expandedAll = false"
-                >
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+
+            {{-- Tombol Buka/Tutup Semua (Menggunakan Livewire wire:click) --}}
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <x-filament::button size="sm" color="gray" icon="heroicon-o-arrows-pointing-in"
+                    wire:click="$set('expandAll', false)">
                     Tutup Semua
+                </x-filament::button>
+                <x-filament::button size="sm" color="primary" icon="heroicon-o-arrows-pointing-out"
+                    wire:click="$set('expandAll', true)" outlined>
+                    Buka Semua
                 </x-filament::button>
             </div>
 
+            {{-- Looping Data Tahun Ajaran --}}
             @foreach ($this->treeData as $yearGroup)
-                <div
-                    x-data="{ yearOpen: false }"
-                    x-init="
-                        yearOpen = expandedAll;
-                        $watch('expandedAll', val => yearOpen = val)
-                    "
-                    class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
-                >
-                    <button
-                        x-on:click="yearOpen = !yearOpen"
-                        class="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
-                    >
-                        <span x-show="!yearOpen">
-                            <x-heroicon-o-chevron-right class="w-5 h-5 text-gray-400" />
-                        </span>
-                        <span x-show="yearOpen" style="display: none">
-                            <x-heroicon-o-chevron-down class="w-5 h-5 text-gray-400" />
-                        </span>
-                        <span class="font-semibold text-gray-900 dark:text-white">{{ $yearGroup['year']->name }}</span>
-                        <span class="text-sm text-gray-500 dark:text-gray-400">
-                            ({{ count($yearGroup['classes']) }} kelas, {{ $yearGroup['totalLearners'] }} peserta)
-                        </span>
-                        @if ($yearGroup['year']->is_active)
-                            <x-filament::badge size="sm" color="success">Aktif</x-filament::badge>
-                        @endif
-                    </button>
+                <x-filament::section :collapsible="true" :collapsed="!$this->expandAll" :heading="$yearGroup['year']->name" :description="count($yearGroup['classes']) .
+                    ' kelas berjalan, total ' .
+                    $yearGroup['totalLearners'] .
+                    ' peserta didik'"
+                    :icon="$yearGroup['year']->is_active ? 'heroicon-o-check-circle' : 'heroicon-o-clock'" :iconColor="$yearGroup['year']->is_active ? 'success' : 'gray'">
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
 
-                    <div x-show="yearOpen" style="display: none" class="divide-y divide-gray-100 dark:divide-gray-700">
+                        {{-- Looping Data Kelas --}}
                         @foreach ($yearGroup['classes'] as $classGroup)
-                            <div
-                                x-data="{ classOpen: false }"
-                                x-init="
-                                    classOpen = expandedAll;
-                                    $watch('expandedAll', val => classOpen = val)
-                                "
-                                class="ml-6"
-                            >
-                                <button
-                                    x-on:click="classOpen = !classOpen"
-                                    class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
-                                >
-                                    <span x-show="!classOpen">
-                                        <x-heroicon-o-chevron-right class="w-4 h-4 text-gray-400" />
-                                    </span>
-                                    <span x-show="classOpen" style="display: none">
-                                        <x-heroicon-o-chevron-down class="w-4 h-4 text-gray-400" />
-                                    </span>
-                                    <x-heroicon-o-building-library class="w-5 h-5 text-blue-500" />
-                                    <span class="font-medium text-gray-800 dark:text-gray-200">
-                                        {{ $classGroup['class']->name }}
-                                    </span>
-                                    <span class="text-xs text-gray-400">
-                                        ({{ $classGroup['class']->program?->name ?? '-' }})
-                                    </span>
-                                    <span class="text-sm text-gray-500 dark:text-gray-400">
-                                        {{ count($classGroup['learners']) }} peserta
-                                    </span>
-                                </button>
-
-                                <div x-show="classOpen" style="display: none" class="ml-10 border-l-2 border-gray-200 dark:border-gray-600 pl-4 py-1">
+                            <x-filament::section :collapsible="true" :collapsed="!$this->expandAll" :heading="$classGroup['class']->name" :description="$classGroup['class']->program?->name ?? 'Program Tidak Ditentukan'"
+                                icon="heroicon-o-building-library" iconColor="primary" compact>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
                                     @forelse ($classGroup['learners'] as $learner)
-                                        <div class="flex items-center gap-3 py-1.5 text-sm">
-                                            <x-heroicon-o-user class="w-4 h-4 text-gray-400 shrink-0" />
-                                            <span class="text-gray-700 dark:text-gray-300">{{ $learner->name }}</span>
-                                            @if ($learner->nis)
-                                                <span class="text-gray-400 text-xs">NIS: {{ $learner->nis }}</span>
-                                            @endif
-                                            @if ($learner->nisn)
-                                                <span class="text-gray-400 text-xs">NISN: {{ $learner->nisn }}</span>
-                                            @endif
+                                        {{-- Kotak Peserta Didik --}}
+                                        <div
+                                            style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.75rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem;">
+
+                                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                                {{-- Avatar Bulat Inisial --}}
+                                                <div
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 9999px; background-color: #e0e7ff; color: #4f46e5; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">
+                                                    {{ substr($learner->name, 0, 2) }}
+                                                </div>
+
+                                                {{-- Nama Siswa --}}
+                                                <span style="font-weight: 500; font-size: 0.875rem; color: #111827;">
+                                                    {{ $learner->name }}
+                                                </span>
+                                            </div>
+
+                                            {{-- Badges NIS & NISN --}}
+                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                @if ($learner->nis)
+                                                    <x-filament::badge color="info" size="sm"
+                                                        icon="heroicon-m-identification">
+                                                        NIS: {{ $learner->nis }}
+                                                    </x-filament::badge>
+                                                @endif
+
+                                                @if ($learner->nisn)
+                                                    <x-filament::badge color="success" size="sm"
+                                                        icon="heroicon-m-identification">
+                                                        NISN: {{ $learner->nisn }}
+                                                    </x-filament::badge>
+                                                @endif
+                                            </div>
+
                                         </div>
+
                                     @empty
-                                        <div class="text-sm text-gray-400 italic py-2">
-                                            Belum ada peserta didik
+                                        <div
+                                            style="font-size: 0.875rem; color: #6b7280; font-style: italic; padding: 0.75rem 1rem; background-color: #f9fafb; border: 1px dashed #d1d5db; border-radius: 0.5rem; text-align: center;">
+                                            Belum ada peserta didik yang terdaftar di kelas ini.
                                         </div>
                                     @endforelse
                                 </div>
-                            </div>
+                            </x-filament::section>
                         @endforeach
+
                     </div>
-                </div>
+                </x-filament::section>
             @endforeach
 
-            <div class="text-sm text-gray-400 mt-4">
-                Total: {{ count($this->treeData) }} tahun ajaran, {{ $this->totalClasses }} kelas, {{ $this->totalLearners }} peserta didik
+            {{-- Ringkasan Total di Bawah --}}
+            <div
+                style="display: flex; align-items: center; justify-content: center; padding: 1rem; margin-top: 1.5rem; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
+                <p style="font-size: 0.875rem; font-weight: 500; color: #4b5563; margin: 0;">
+                    Menampilkan <span style="color: #4f46e5; font-weight: 700;">{{ count($this->treeData) }}</span>
+                    Tahun Ajaran,
+                    <span style="color: #4f46e5; font-weight: 700;">{{ $this->totalClasses }}</span> Kelas, dan
+                    <span style="color: #4f46e5; font-weight: 700;">{{ $this->totalLearners }}</span> Peserta Didik
+                </p>
             </div>
+
         </div>
     @endif
 </x-filament-panels::page>

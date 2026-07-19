@@ -149,6 +149,9 @@ class UserResource extends Resource
                         }
                     }),
             ])
+            ->emptyStateHeading('Belum ada pengguna')
+            ->emptyStateDescription('Belum ada pengguna yang terdaftar di sistem. Silakan tambah pengguna baru.')
+            ->emptyStateIcon('heroicon-o-users')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

@@ -67,6 +67,9 @@ class HomeroomTeacherResource extends Resource
                 EditAction::make(),
                 DeleteAction::make(),
             ])
+            ->emptyStateHeading('Belum ada wali kelas')
+            ->emptyStateDescription('Belum ada wali kelas yang ditentukan.')
+            ->emptyStateIcon('heroicon-o-academic-cap')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

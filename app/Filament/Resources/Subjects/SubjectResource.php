@@ -123,6 +123,9 @@ class SubjectResource extends Resource
                         }
                     }),
             ])
+            ->emptyStateHeading('Belum ada mata pelajaran')
+            ->emptyStateDescription('Belum ada mata pelajaran yang terdaftar.')
+            ->emptyStateIcon('heroicon-o-book-open')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

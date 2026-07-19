@@ -60,6 +60,9 @@ class GradePredicateResource extends Resource
                 EditAction::make(),
                 DeleteAction::make(),
             ])
+            ->emptyStateHeading('Belum ada predikat')
+            ->emptyStateDescription('Belum ada predikat nilai yang dikonfigurasi.')
+            ->emptyStateIcon('heroicon-o-document-chart-bar')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

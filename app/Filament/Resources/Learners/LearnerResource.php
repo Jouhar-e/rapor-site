@@ -320,12 +320,15 @@ class LearnerResource extends Resource
                         }
                     }),
             ])
+            ->emptyStateHeading('Belum ada warga belajar')
+            ->emptyStateDescription('Belum ada warga belajar yang terdaftar.')
+            ->emptyStateIcon('heroicon-o-user-group')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->before(function (DeleteBulkAction $action, $records) {
                             foreach ($records as $record) {
-                                if ($record->grades()->count() > 0 || $record->attendances()->count() > 0 || $record->classLearners()->count() > 0 || $record->homeroomNotes()->count() > 0 || $record->learnerExtracurriculars()->count() > 0) {
+                                if ($record->classLearners()->count() > 0 || $record->grades()->count() > 0 || $record->attendances()->count() > 0 || $record->learnerExtracurriculars()->count() > 0) {
                                     Notification::make()
                                         ->warning()
                                         ->title('Tidak dapat menghapus')
