@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Learners;
 
+use App\Filament\Resources\Learners\Pages\LearnerProfile;
 use App\Filament\Resources\Learners\Pages\ManageLearners;
 use App\Models\AcademicYear;
 use App\Models\Classes;
@@ -12,6 +13,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -249,6 +251,9 @@ class LearnerResource extends Resource
                     )),
             ])
             ->recordActions([
+                ViewAction::make()
+                    ->label('Profil')
+                    ->url(fn (Model $record): string => route('filament.admin.resources.learners.profile', $record)),
                 EditAction::make()
                     ->mutateRecordDataUsing(function (array $data, Model $record): array {
                         $classLearner = ClassLearner::where('learner_id', $record->id)->first();
@@ -349,6 +354,7 @@ class LearnerResource extends Resource
     {
         return [
             'index' => ManageLearners::route('/'),
+            'profile' => LearnerProfile::route('/{record}/profile'),
         ];
     }
 }

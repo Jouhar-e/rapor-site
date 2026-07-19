@@ -38,6 +38,11 @@ class ImportAttendance extends Page implements HasTable
 
     protected ?string $heading = 'Import Presensi';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()->can('import.attendance');
+    }
+
     protected string $view = 'filament.pages.import-attendance';
 
     public ?array $data = [];

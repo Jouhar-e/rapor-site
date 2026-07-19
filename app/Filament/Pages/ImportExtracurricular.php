@@ -39,6 +39,11 @@ class ImportExtracurricular extends Page implements HasTable
 
     protected ?string $heading = 'Import Nilai Ekstrakurikuler';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()->can('import.extracurricular');
+    }
+
     protected string $view = 'filament.pages.import-extracurricular';
 
     public ?array $data = [];

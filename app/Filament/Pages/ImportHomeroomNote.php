@@ -38,6 +38,11 @@ class ImportHomeroomNote extends Page implements HasTable
 
     protected ?string $heading = 'Import Catatan Wali Kelas';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()->can('import.homeroom-note');
+    }
+
     protected string $view = 'filament.pages.import-homeroom-note';
 
     public ?array $data = [];
