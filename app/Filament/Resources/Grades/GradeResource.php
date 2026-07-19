@@ -16,6 +16,8 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -55,100 +57,125 @@ class GradeResource extends Resource
     {
         return $schema
             ->components([
-                Select::make('learner_id')
-                    ->label('Peserta Didik')
-                    ->options(function (): array {
-                        $user = Filament::auth()->user();
-                        $classIds = HomeroomTeacher::where('user_id', $user->id)
-                            ->pluck('class_id');
+                Section::make('Informasi Akademik')
+                    ->description('Pilih peserta didik dan mata pelajaran yang akan dinilai.')
+                    ->icon('heroicon-o-academic-cap')
+                    ->schema([
+                        Grid::make(2)->schema([
+                            Select::make('learner_id')
+                                ->label('Peserta Didik')
+                                ->options(function (): array {
+                                    $user = Filament::auth()->user();
+                                    $classIds = HomeroomTeacher::where('user_id', $user->id)
+                                        ->pluck('class_id');
 
-                        if ($classIds->isNotEmpty()) {
-                            $learnerIds = ClassLearner::whereIn('class_id', $classIds)
-                                ->pluck('learner_id');
+                                    if ($classIds->isNotEmpty()) {
+                                        $learnerIds = ClassLearner::whereIn('class_id', $classIds)
+                                            ->pluck('learner_id');
 
-                            return Learner::whereIn('id', $learnerIds)
-                                ->pluck('name', 'id')
-                                ->toArray();
-                        }
+                                        return Learner::whereIn('id', $learnerIds)
+                                            ->pluck('name', 'id')
+                                            ->toArray();
+                                    }
 
-                        if ($user->hasRole('admin')) {
-                            return Learner::pluck('name', 'id')->toArray();
-                        }
+                                    if ($user->hasRole('admin')) {
+                                        return Learner::pluck('name', 'id')->toArray();
+                                    }
 
-                        return [];
-                    })
-                    ->searchable()
-                    ->required(),
-                Select::make('subject_id')
-                    ->label('Mata Pelajaran')
-                    ->relationship('subject', 'name')
-                    ->required(),
-                Select::make('academic_year_id')
-                    ->label('Tahun Ajaran')
-                    ->relationship('academicYear', 'name', fn ($query) => $query->where('is_archived', false))
-                    ->required(),
-                Select::make('semester_id')
-                    ->label('Semester')
-                    ->relationship('semester', 'name', fn ($query) => $query->whereHas('academicYear', fn ($q) => $q->where('is_archived', false)))
-                    ->required(),
-                TextInput::make('task_score')
-                    ->label('Tugas')
-                    ->numeric()
-                    ->default(null)
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(fn (Get $get, Set $set) => static::updateFinalScore($get, $set)),
-                TextInput::make('pts_score')
-                    ->label('Nilai PTS')
-                    ->numeric()
-                    ->default(null)
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(fn (Get $get, Set $set) => static::updateFinalScore($get, $set)),
-                TextInput::make('pas_score')
-                    ->label('Nilai PAS')
-                    ->numeric()
-                    ->default(null)
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(fn (Get $get, Set $set) => static::updateFinalScore($get, $set)),
-                TextInput::make('practice_score')
-                    ->label('Praktik')
-                    ->numeric()
-                    ->default(null)
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(fn (Get $get, Set $set) => static::updateFinalScore($get, $set)),
-                TextInput::make('final_score')
-                    ->label('Nilai Akhir')
-                    ->numeric()
-                    ->disabled()
-                    ->dehydrated(),
-                Select::make('predicate')
-                    ->label('Predikat')
-                    ->options([
-                        'A' => 'A',
-                        'B' => 'B',
-                        'C' => 'C',
-                        'D' => 'D',
-                    ])
-                    ->disabled()
-                    ->dehydrated()
-                    ->nullable(),
-                Textarea::make('description')
-                    ->label('Keterangan')
-                    ->default(null)
-                    ->columnSpanFull(),
-                Textarea::make('competency_description')
-                    ->label('Capaian Kompetensi')
-                    ->default(null)
-                    ->columnSpanFull(),
-                Select::make('status')
-                    ->label('Status')
-                    ->options([
-                        'draft' => 'Konsep',
-                        'published' => 'Diterbitkan',
-                        'locked' => 'Terkunci',
-                    ])
-                    ->required()
-                    ->default('draft')
-                    ->selectablePlaceholder(false),
+                                    return [];
+                                })
+                                ->searchable()
+                                ->required(),
+                            Select::make('subject_id')
+                                ->label('Mata Pelajaran')
+                                ->relationship('subject', 'name')
+                                ->searchable()
+                                ->required(),
+                            Select::make('academic_year_id')
+                                ->label('Tahun Ajaran')
+                                ->relationship('academicYear', 'name', fn ($query) => $query->where('is_archived', false))
+                                ->required(),
+                            Select::make('semester_id')
+                                ->label('Semester')
+                                ->relationship('semester', 'name', fn ($query) => $query->whereHas('academicYear', fn ($q) => $q->where('is_archived', false)))
+                                ->required(),
+                        ]),
+                    ]),
+
+                Section::make('Rincian Komponen Nilai')
+                    ->description('Masukkan nilai untuk setiap komponen. Nilai akhir akan dihitung otomatis.')
+                    ->icon('heroicon-o-calculator')
+                    ->schema([
+                        Grid::make(4)->schema([
+                            TextInput::make('task_score')
+                                ->label('Nilai Tugas')
+                                ->numeric()
+                                ->default(null)
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(fn (Get $get, Set $set) => static::updateFinalScore($get, $set)),
+                            TextInput::make('pts_score')
+                                ->label('Nilai PTS')
+                                ->numeric()
+                                ->default(null)
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(fn (Get $get, Set $set) => static::updateFinalScore($get, $set)),
+                            TextInput::make('pas_score')
+                                ->label('Nilai PAS')
+                                ->numeric()
+                                ->default(null)
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(fn (Get $get, Set $set) => static::updateFinalScore($get, $set)),
+                            TextInput::make('practice_score')
+                                ->label('Nilai Praktik')
+                                ->numeric()
+                                ->default(null)
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(fn (Get $get, Set $set) => static::updateFinalScore($get, $set)),
+                        ]),
+                        Grid::make(2)->schema([
+                            TextInput::make('final_score')
+                                ->label('Nilai Akhir')
+                                ->numeric()
+                                ->disabled()
+                                ->dehydrated()
+                                ->extraInputAttributes(['class' => 'font-bold text-primary-600']),
+                            Select::make('predicate')
+                                ->label('Predikat')
+                                ->options([
+                                    'A' => 'A (Sangat Baik)',
+                                    'B' => 'B (Baik)',
+                                    'C' => 'C (Cukup)',
+                                    'D' => 'D (Kurang)',
+                                ])
+                                ->disabled()
+                                ->dehydrated()
+                                ->nullable(),
+                        ]),
+                    ]),
+
+                Section::make('Keterangan & Status')
+                    ->icon('heroicon-o-document-text')
+                    ->collapsed()
+                    ->schema([
+                        Textarea::make('description')
+                            ->label('Catatan Khusus (Opsional)')
+                            ->default(null)
+                            ->columnSpanFull(),
+                        Textarea::make('competency_description')
+                            ->label('Capaian Kompetensi')
+                            ->default(null)
+                            ->columnSpanFull(),
+                        Select::make('status')
+                            ->label('Status Penilaian')
+                            ->options([
+                                'draft' => 'Konsep (Draft)',
+                                'published' => 'Diterbitkan (Final)',
+                                'locked' => 'Terkunci (Tidak dapat diedit)',
+                            ])
+                            ->required()
+                            ->default('draft')
+                            ->selectablePlaceholder(false),
+                    ]),
             ]);
     }
 
@@ -185,10 +212,12 @@ class GradeResource extends Resource
                     ->searchable(),
                 TextColumn::make('academicYear.name')
                     ->label('Tahun Akademik')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('semester.name')
                     ->label('Semester')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('task_score')
                     ->label('Tugas')
                     ->numeric()
@@ -202,13 +231,14 @@ class GradeResource extends Resource
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('practice_score')
-                    ->label('Praktek')
+                    ->label('Praktik')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('final_score')
                     ->label('Nilai Akhir')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold'),
                 TextColumn::make('predicate')
                     ->label('Predikat')
                     ->badge()
@@ -236,11 +266,6 @@ class GradeResource extends Resource
                         default => $state,
                     })
                     ->searchable(),
-                TextColumn::make('created_at')
-                    ->label('Dibuat')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->label('Diperbarui')
                     ->dateTime()

@@ -65,8 +65,8 @@ class ManageGrades extends Page implements HasTable
     public function getBreadcrumbs(): array
     {
         return [
-            'Akademik' => null,
-            'Nilai' => GradeResource::getUrl('index'),
+            // Format yang benar: URL => Label Teks
+            GradeResource::getUrl('index') => 'Nilai',
         ];
     }
 
@@ -123,7 +123,7 @@ class ManageGrades extends Page implements HasTable
             : null;
         $this->semester_id = $activeSemester?->id;
 
-        $this->pivotSubjects = Subject::orderBy('name')->get();
+        $this->pivotSubjects = $this->getPivotSubjects();
 
         $user = Filament::auth()->user();
         $homeroomClassIds = HomeroomTeacher::where('user_id', $user->id)->pluck('class_id');
@@ -380,10 +380,26 @@ class ManageGrades extends Page implements HasTable
             ->when($this->semester_id, fn ($q) => $q->where('semester_id', $this->semester_id));
     }
 
+    protected function getPivotSubjects(): Collection
+    {
+        $classIds = $this->getAccessibleClassIds();
+
+        $query = Subject::with('classes')->orderBy('name');
+
+        if (! empty($classIds)) {
+            $query->whereIn('class_id', $classIds);
+        }
+
+        return $query->get();
+    }
+
     protected function buildPivotTable(Table $table): Table
     {
-        $subjects = Subject::orderBy('name')->get();
+        $subjects = $this->getPivotSubjects();
         $this->pivotSubjects = $subjects;
+
+        $nameCounts = $subjects->countBy(fn (Subject $s): string => $s->name);
+        $needsDisambiguation = $nameCounts->some(fn (int $count): bool => $count > 1);
 
         $columns = [
             TextColumn::make('learner_name')
@@ -400,9 +416,16 @@ class ManageGrades extends Page implements HasTable
 
         foreach ($subjects as $subject) {
             $subjectId = $subject->id;
+            $label = $subject->name;
+            if ($needsDisambiguation && $nameCounts[$subject->name] > 1) {
+                $className = $subject->relationLoaded('classes') && $subject->classes
+                    ? $subject->classes->name
+                    : ('Kelas '.$subject->class_id);
+                $label .= ' ('.$className.')';
+            }
 
             $columns[] = TextColumn::make("subject_{$subjectId}")
-                ->label($subject->name)
+                ->label($label)
                 ->alignCenter()
                 ->sortable()
                 ->state(function (mixed $record) use ($subjectId): string {
@@ -434,7 +457,7 @@ class ManageGrades extends Page implements HasTable
             return Grade::query()->whereRaw('0 = 1');
         }
 
-        $subjectIds = Subject::orderBy('name')->pluck('id');
+        $subjectIds = $this->getPivotSubjects()->pluck('id');
         $subjectCasts = $subjectIds->map(fn ($id) => "MAX(CASE WHEN g.subject_id = {$id} THEN g.final_score END) as subject_{$id}")->implode(', ');
 
         $sub = DB::table('grades', 'g')
@@ -479,13 +502,14 @@ class ManageGrades extends Page implements HasTable
             abort(403);
         }
 
+        $exportSubjectIds = $this->getPivotSubjects()->pluck('id');
         $records = DB::table('grades', 'g')
             ->select(
                 'l.nis as nis',
                 'l.name as learner_name',
                 'ay.name as academic_year',
                 's.name as semester',
-                DB::raw(Subject::orderBy('name')->pluck('id')->map(fn ($id) => "MAX(CASE WHEN g.subject_id = {$id} THEN g.final_score END) as subject_{$id}")->implode(', '))
+                DB::raw($exportSubjectIds->map(fn ($id) => "MAX(CASE WHEN g.subject_id = {$id} THEN g.final_score END) as subject_{$id}")->implode(', '))
             )
             ->join('learners as l', 'l.id', '=', 'g.learner_id')
             ->join('academic_years as ay', 'ay.id', '=', 'g.academic_year_id')

@@ -1,49 +1,72 @@
-<x-filament::page>
-    <div class="mb-6">
+<x-filament-panels::page>
+
+    {{-- 1. BAGIAN FILTER PENCARIAN --}}
+    <x-filament::section icon="heroicon-o-funnel" heading="Filter Data Akademik"
+        description="Pilih kelas, tahun ajaran, dan semester untuk memuat data nilai." class="mb-2">
         {{ $this->filterForm }}
-    </div>
+    </x-filament::section>
 
-    @if (filled($class_id ?? $this->getAccessibleClassIds()))
-        <x-filament::section class="mb-6">
-            <div class="grid grid-cols-4 gap-4">
-                <div class="text-center">
-                    <div class="text-2xl font-bold">{{ $totalStudents }}</div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400">Siswa</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold">{{ $totalGrades }}</div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400">Total Nilai</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold">{{ $publishedGrades }}</div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400">Diterbitkan</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold">{{ $lockedGrades }}</div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400">Terkunci</div>
-                </div>
+    {{-- 2. BAGIAN WIDGET STATISTIK (Menggunakan Inline CSS agar pasti rapi) --}}
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 0.5rem;">
+
+        {{-- Card: Total Siswa --}}
+        <div
+            style="display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
+            <div
+                style="display: flex; align-items: center; justify-content: center; width: 3.5rem; height: 3.5rem; border-radius: 9999px; background-color: #eff6ff; color: #3b82f6;">
+                <x-heroicon-o-users style="width: 1.75rem; height: 1.75rem;" />
             </div>
-        </x-filament::section>
-    @endif
+            <div>
+                <p style="margin: 0; font-size: 0.875rem; color: #6b7280; font-weight: 500;">Total Siswa</p>
+                <h3 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #111827;">{{ $totalStudents }}</h3>
+            </div>
+        </div>
 
-    <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
-        <nav class="flex gap-4 -mb-px">
-            <button
-                wire:click="setActiveTab('input')"
-                class="px-4 py-2 text-sm font-medium border-b-2 transition-colors
-                    {{ $activeTab === 'input' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
-            >
-                Input Nilai
-            </button>
-            <button
-                wire:click="setActiveTab('pivot')"
-                class="px-4 py-2 text-sm font-medium border-b-2 transition-colors
-                    {{ $activeTab === 'pivot' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
-            >
-                Rekap Nilai
-            </button>
-        </nav>
+        {{-- Card: Total Nilai --}}
+        <div
+            style="display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
+            <div
+                style="display: flex; align-items: center; justify-content: center; width: 3.5rem; height: 3.5rem; border-radius: 9999px; background-color: #f3e8ff; color: #a855f7;">
+                <x-heroicon-o-document-text style="width: 1.75rem; height: 1.75rem;" />
+            </div>
+            <div>
+                <p style="margin: 0; font-size: 0.875rem; color: #6b7280; font-weight: 500;">Total Nilai</p>
+                <h3 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #111827;">{{ $totalGrades }}</h3>
+            </div>
+        </div>
+
+        {{-- Card: Diterbitkan --}}
+        <div
+            style="display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
+            <div
+                style="display: flex; align-items: center; justify-content: center; width: 3.5rem; height: 3.5rem; border-radius: 9999px; background-color: #ecfdf5; color: #10b981;">
+                <x-heroicon-o-check-circle style="width: 1.75rem; height: 1.75rem;" />
+            </div>
+            <div>
+                <p style="margin: 0; font-size: 0.875rem; color: #6b7280; font-weight: 500;">Diterbitkan</p>
+                <h3 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #111827;">{{ $publishedGrades }}</h3>
+            </div>
+        </div>
+
+        {{-- Card: Terkunci --}}
+        <div
+            style="display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
+            <div
+                style="display: flex; align-items: center; justify-content: center; width: 3.5rem; height: 3.5rem; border-radius: 9999px; background-color: #fef2f2; color: #ef4444;">
+                <x-heroicon-o-lock-closed style="width: 1.75rem; height: 1.75rem;" />
+            </div>
+            <div>
+                <p style="margin: 0; font-size: 0.875rem; color: #6b7280; font-weight: 500;">Terkunci</p>
+                <h3 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #111827;">{{ $lockedGrades }}</h3>
+            </div>
+        </div>
+
     </div>
 
-    {{ $this->table }}
-</x-filament::page>
+    {{-- 3. BAGIAN TABEL DATA --}}
+    <div>
+        {{ $this->table }}
+    </div>
+
+</x-filament-panels::page>
