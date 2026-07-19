@@ -333,8 +333,8 @@ class GradeResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ManageGradePivot::route('/'),
-            'manage' => ManageGrades::route('/manage'),
+            'index' => ManageGrades::route('/'),
+            'rekap' => ManageGradePivot::route('/rekap'),
         ];
     }
 }

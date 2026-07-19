@@ -314,7 +314,7 @@ class ImportGrade extends Page implements HasTable
         $actions[] = Action::make('back')
             ->label('Kembali ke Input Nilai')
             ->icon('heroicon-o-arrow-left')
-            ->url(fn (): string => GradeResource::getUrl('manage'))
+            ->url(fn (): string => GradeResource::getUrl('index'))
             ->color('gray');
 
         return $actions;

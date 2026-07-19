@@ -48,9 +48,9 @@ class ManageGradePivot extends Page implements HasTable
     {
         return [
             Action::make('manage')
-                ->label('Input Nilai')
+                ->label('Dashboard Nilai')
                 ->icon('heroicon-o-pencil-square')
-                ->url(GradeResource::getUrl('manage')),
+                ->url(GradeResource::getUrl('index')),
             Action::make('export')
                 ->label('Ekspor Nilai')
                 ->icon('heroicon-o-arrow-down-tray')

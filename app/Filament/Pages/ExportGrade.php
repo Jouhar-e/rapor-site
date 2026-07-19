@@ -121,7 +121,7 @@ class ExportGrade extends Page
             Action::make('back')
                 ->label('Kembali ke Input Nilai')
                 ->icon('heroicon-o-arrow-left')
-                ->url(fn (): string => GradeResource::getUrl('manage'))
+                ->url(fn (): string => GradeResource::getUrl('index'))
                 ->color('gray'),
             Action::make('export')
                 ->label('Unduh Excel')
