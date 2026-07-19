@@ -158,7 +158,7 @@ break;
 
         <h1>LAPORAN HASIL BELAJAR PESERTA DIDIK</h1>
 
-        <h2>PROGRAM {{ strtoupper($program->name ?? '-') }}</h2>
+        <h2>PROGRAM {{ strtoupper($programName) }}</h2>
 
     </div>
 

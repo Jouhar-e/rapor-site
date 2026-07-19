@@ -62,7 +62,7 @@ class ImportLearner extends Page implements HasTable
                 FileUpload::make('file')
                     ->label('File Excel (.xlsx)')
                     ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
-                    ->maxSize(10240)
+                    ->maxSize(2048)
                     ->storeFiles(false)
                     ->required(),
             ])
@@ -92,7 +92,7 @@ class ImportLearner extends Page implements HasTable
         $headers = array_map('strval', array_map('trim', $rows[0]));
         array_shift($rows);
 
-        $required = ['nis', 'nisn', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'status', 'class_name'];
+        $required = ['nis', 'nisn', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'status', 'class_name', 'religion', 'child_order', 'phone', 'admission_date', 'admission_class', 'admission_status', 'father_name', 'father_job', 'mother_name', 'mother_job', 'guardian_name', 'guardian_job', 'report_number'];
 
         $missing = array_diff($required, $headers);
         if (! empty($missing)) {

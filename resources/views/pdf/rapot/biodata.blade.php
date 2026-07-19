@@ -160,7 +160,7 @@
             <td></td>
             <td class="indent">di Kelas</td>
             <td>:</td>
-            <td>{{ $learner->admission_class ?: '-' }}</td>
+            <td>{{ $learner->admission_grade ?: '-' }}</td>
         </tr>
 
         <tr>
@@ -174,7 +174,7 @@
             <td></td>
             <td class="indent">sebagai</td>
             <td>:</td>
-            <td>{{ $learner->admission_status ?: '-' }}</td>
+            <td>{{ $learner->admission_type ?: '-' }}</td>
         </tr>
 
         <tr>
