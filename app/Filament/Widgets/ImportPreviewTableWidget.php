@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
@@ -10,11 +9,6 @@ use Filament\Widgets\TableWidget;
 class ImportPreviewTableWidget extends TableWidget
 {
     public array $data = [];
-
-    public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
-    {
-        return null;
-    }
 
     public function table(Table $table): Table
     {
