@@ -76,8 +76,7 @@ class LearnerResource extends Resource
                     })
                     ->required()
                     ->placeholder('Pilih Semester')
-                    ->live()
-                    ->afterStateUpdated(fn (callable $set) => $set('semester_id', null)),
+                    ->live(),
                 TextInput::make('nis')
                     ->label('NIS')
                     ->required()
@@ -269,11 +268,10 @@ class LearnerResource extends Resource
                         $class = Classes::find($classId);
                         $data['program_id'] = $class?->program_id;
                         $record->update($data);
-                        ClassLearner::where('learner_id', $record->id)->update([
-                            'class_id' => $classId,
-                            'academic_year_id' => $academicYearId,
-                            'semester_id' => $semesterId,
-                        ]);
+                        ClassLearner::updateOrCreate(
+                            ['learner_id' => $record->id, 'academic_year_id' => $academicYearId],
+                            ['class_id' => $classId, 'semester_id' => $semesterId],
+                        );
 
                         return $record;
                     }),
