@@ -7,6 +7,7 @@ use App\Models\Classes;
 use App\Models\Phase;
 use App\Models\Subject;
 use App\Models\SubjectGroup;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -18,6 +19,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Wizard;
+use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -48,57 +51,73 @@ class ClassesResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema
-            ->columns(2)
             ->components([
-                Select::make('program_id')
-                    ->label('Program')
-                    ->relationship('program', 'name')
-                    ->required(),
-                Select::make('phase_id')
-                    ->label('Fase')
-                    ->options(fn () => Phase::where('is_active', true)->pluck('name', 'id'))
-                    ->placeholder('Pilih Fase'),
-                TextInput::make('name')
-                    ->label('Nama Kelas')
-                    ->required()
-                    ->maxLength(255),
-                Select::make('status')
-                    ->label('Status')
-                    ->options([
-                        'aktif' => 'Aktif',
-                        'nonaktif' => 'Nonaktif',
-                        'lulus' => 'Lulus',
-                    ])
-                    ->required()
-                    ->default('aktif'),
-                Textarea::make('description')
-                    ->label('Keterangan')
-                    ->default(null)
-                    ->columnSpanFull(),
-                Repeater::make('subjects')
-                    ->relationship('subjects')
-                    ->schema([
-                        TextInput::make('name')
-                            ->label('Nama Mata Pelajaran')
-                            ->required()
-                            ->maxLength(255),
-                        TextInput::make('code')
-                            ->label('Kode')
-                            ->required()
-                            ->maxLength(255),
-                        Select::make('subject_group_id')
-                            ->label('Kelompok')
-                            ->options(fn () => SubjectGroup::where('is_active', true)->pluck('name', 'id')),
-                        Textarea::make('description')
-                            ->label('Keterangan')
-                            ->default(null),
-                        Toggle::make('is_active')
-                            ->label('Aktif')
-                            ->default(true),
-                    ])
-                    ->defaultItems(0)
-                    ->addActionLabel('Tambah Mata Pelajaran')
-                    ->columnSpanFull(),
+                Wizard::make([
+                    Step::make('Program & Fase')
+                        ->icon('heroicon-o-academic-cap')
+                        ->columns(2)
+                        ->schema([
+                            Select::make('program_id')
+                                ->label('Program')
+                                ->relationship('program', 'name')
+                                ->required(),
+                            Select::make('phase_id')
+                                ->label('Fase')
+                                ->options(fn () => Phase::where('is_active', true)->pluck('name', 'id'))
+                                ->placeholder('Pilih Fase'),
+                        ]),
+                    Step::make('Identitas Kelas')
+                        ->icon('heroicon-o-building-library')
+                        ->columns(2)
+                        ->schema([
+                            TextInput::make('name')
+                                ->label('Nama Kelas')
+                                ->required()
+                                ->maxLength(255),
+                            Select::make('status')
+                                ->label('Status')
+                                ->options([
+                                    'aktif' => 'Aktif',
+                                    'nonaktif' => 'Nonaktif',
+                                    'lulus' => 'Lulus',
+                                ])
+                                ->required()
+                                ->default('aktif'),
+                            Textarea::make('description')
+                                ->label('Keterangan')
+                                ->default(null)
+                                ->columnSpanFull(),
+                        ]),
+                    Step::make('Mata Pelajaran')
+                        ->icon('heroicon-o-book-open')
+                        ->schema([
+                            Repeater::make('subjects')
+                                ->relationship('subjects')
+                                ->schema([
+                                    TextInput::make('name')
+                                        ->label('Nama Mata Pelajaran')
+                                        ->required()
+                                        ->maxLength(255),
+                                    TextInput::make('code')
+                                        ->label('Kode')
+                                        ->required()
+                                        ->maxLength(255),
+                                    Select::make('subject_group_id')
+                                        ->label('Kelompok')
+                                        ->options(fn () => SubjectGroup::where('is_active', true)->pluck('name', 'id')),
+                                    Textarea::make('description')
+                                        ->label('Keterangan')
+                                        ->default(null),
+                                    Toggle::make('is_active')
+                                        ->label('Aktif')
+                                        ->default(true),
+                                ])
+                                ->defaultItems(0)
+                                ->addActionLabel('Tambah Mata Pelajaran'),
+                        ]),
+                ])
+                    ->nextAction(fn (Action $action): Action => $action->label('Lanjut'))
+                    ->previousAction(fn (Action $action): Action => $action->label('Kembali')),
             ]);
     }
 

@@ -6,17 +6,19 @@ use App\Models\AcademicYear;
 use App\Models\Classes;
 use App\Models\ClassLearner;
 use App\Models\Program;
+use BackedEnum;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
+use UnitEnum;
 
 class ExploreClasses extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-sitemap';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-sitemap';
 
-    protected static string $view = 'filament.pages.explore-classes';
+    protected string $view = 'filament.pages.explore-classes';
 
-    protected static ?string $navigationGroup = 'Master Data';
+    protected static string|UnitEnum|null $navigationGroup = 'Master Data';
 
     protected static ?int $navigationSort = 99;
 
