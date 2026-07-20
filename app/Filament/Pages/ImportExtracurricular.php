@@ -275,6 +275,14 @@ class ImportExtracurricular extends Page implements HasTable
             ]);
     }
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            LearnerExtracurricularResource::getUrl('manage') => 'Nilai Ekstrakurikuler',
+            'Import Nilai Ekstrakurikuler',
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         $actions = [];

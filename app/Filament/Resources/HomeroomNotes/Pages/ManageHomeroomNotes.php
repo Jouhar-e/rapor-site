@@ -15,7 +15,7 @@ class ManageHomeroomNotes extends ManageRecords
     {
         return [
             Action::make('back')
-                ->label('Kembali ke Tabel Catatan')
+                ->label('Kembali')
                 ->icon('heroicon-o-arrow-left')
                 ->url(fn (): string => HomeroomNoteResource::getUrl('index'))
                 ->color('gray'),

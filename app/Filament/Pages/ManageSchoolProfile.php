@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\SchoolProfile;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -33,6 +34,17 @@ class ManageSchoolProfile extends Page
             route('filament.admin.pages.dashboard') => 'Beranda',
             'Sistem',
             'Profil Sekolah',
+        ];
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('back')
+                ->label('Kembali')
+                ->icon('heroicon-o-arrow-left')
+                ->url(fn (): string => url('/admin'))
+                ->color('gray'),
         ];
     }
 

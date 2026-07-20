@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\GradingSetting;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -31,6 +32,17 @@ class ManageGradingSettings extends Page
             route('filament.admin.pages.dashboard') => 'Beranda',
             'Sistem',
             'Pengaturan Penilaian',
+        ];
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('back')
+                ->label('Kembali')
+                ->icon('heroicon-o-arrow-left')
+                ->url(fn (): string => url('/admin'))
+                ->color('gray'),
         ];
     }
 

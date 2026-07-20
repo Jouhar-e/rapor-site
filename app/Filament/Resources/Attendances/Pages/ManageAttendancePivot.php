@@ -37,9 +37,22 @@ class ManageAttendancePivot extends Page implements HasTable
 
     public ?int $semester_id = null;
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            AttendanceResource::getUrl('manage') => 'Presensi',
+            'Rekap Presensi',
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('back')
+                ->label('Kembali')
+                ->icon('heroicon-o-arrow-left')
+                ->url(fn (): string => AttendanceResource::getUrl('manage'))
+                ->color('gray'),
             Action::make('manage')
                 ->label('Input Presensi')
                 ->icon('heroicon-o-pencil-square')

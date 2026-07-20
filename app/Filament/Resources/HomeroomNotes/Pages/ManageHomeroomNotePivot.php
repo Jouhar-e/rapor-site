@@ -39,6 +39,14 @@ class ManageHomeroomNotePivot extends Page implements HasTable
 
     public ?int $semester_id = null;
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            HomeroomNoteResource::getUrl('manage') => 'Catatan Wali Kelas',
+            'Rekap Catatan Wali Kelas',
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         return [

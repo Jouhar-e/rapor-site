@@ -15,7 +15,7 @@ class ManageAttendances extends ManageRecords
     {
         return [
             Action::make('back')
-                ->label('Kembali ke Tabel Presensi')
+                ->label('Kembali')
                 ->icon('heroicon-o-arrow-left')
                 ->url(fn (): string => AttendanceResource::getUrl('index'))
                 ->color('gray'),

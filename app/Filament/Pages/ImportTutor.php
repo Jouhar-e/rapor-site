@@ -232,6 +232,14 @@ class ImportTutor extends Page implements HasTable
         return app(ExcelService::class)->downloadTutorTemplate();
     }
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            TutorResource::getUrl('index') => 'Tutor',
+            'Import Tutor',
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         return [

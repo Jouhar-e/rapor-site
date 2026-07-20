@@ -4,11 +4,8 @@ namespace App\Filament\Resources\Learners;
 
 use App\Filament\Resources\Learners\Pages\LearnerProfile;
 use App\Filament\Resources\Learners\Pages\ManageLearners;
-use App\Models\AcademicYear;
 use App\Models\Classes;
-use App\Models\ClassLearner;
 use App\Models\Learner;
-use App\Models\Semester;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -55,30 +52,6 @@ class LearnerResource extends Resource
         return $schema
             ->columns(2)
             ->components([
-                Select::make('class_id')
-                    ->label('Kelas')
-                    ->options(fn () => Classes::pluck('name', 'id'))
-                    ->required(),
-                Select::make('academic_year_id')
-                    ->label('Tahun Akademik')
-                    ->options(fn () => AcademicYear::where('is_archived', false)->where('is_active', true)->pluck('name', 'id'))
-                    ->required(),
-                Select::make('semester_id')
-                    ->label('Semester')
-                    ->options(function (callable $get): array {
-                        $academicYearId = $get('academic_year_id');
-                        if (! $academicYearId) {
-                            return [];
-                        }
-
-                        return Semester::where('academic_year_id', $academicYearId)
-                            ->whereHas('academicYear', fn ($q) => $q->where('is_archived', false))
-                            ->pluck('name', 'id')
-                            ->toArray();
-                    })
-                    ->required()
-                    ->placeholder('Pilih Semester')
-                    ->live(),
                 TextInput::make('nis')
                     ->label('NIS')
                     ->required()
@@ -254,32 +227,7 @@ class LearnerResource extends Resource
                 ViewAction::make()
                     ->label('Profil')
                     ->url(fn (Model $record): string => route('filament.admin.resources.learners.profile', $record)),
-                EditAction::make()
-                    ->mutateRecordDataUsing(function (array $data, Model $record): array {
-                        $classLearner = ClassLearner::where('learner_id', $record->id)->first();
-                        if ($classLearner) {
-                            $data['class_id'] = $classLearner->class_id;
-                            $data['academic_year_id'] = $classLearner->academic_year_id;
-                            $data['semester_id'] = $classLearner->semester_id;
-                        }
-
-                        return $data;
-                    })
-                    ->using(function (Model $record, array $data): Model {
-                        $classId = $data['class_id'];
-                        $academicYearId = $data['academic_year_id'];
-                        $semesterId = $data['semester_id'] ?? null;
-                        unset($data['class_id'], $data['academic_year_id'], $data['semester_id']);
-                        $class = Classes::find($classId);
-                        $data['program_id'] = $class?->program_id;
-                        $record->update($data);
-                        ClassLearner::updateOrCreate(
-                            ['learner_id' => $record->id, 'academic_year_id' => $academicYearId],
-                            ['class_id' => $classId, 'semester_id' => $semesterId],
-                        );
-
-                        return $record;
-                    }),
+                EditAction::make(),
                 DeleteAction::make()
                     ->before(function (DeleteAction $action, Learner $record) {
                         if ($record->grades()->count() > 0) {

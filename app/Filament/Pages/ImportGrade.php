@@ -279,6 +279,14 @@ class ImportGrade extends Page implements HasTable
             ]);
     }
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            GradeResource::getUrl('index') => 'Nilai',
+            'Import Nilai',
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         $actions = [];

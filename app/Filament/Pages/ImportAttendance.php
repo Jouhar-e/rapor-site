@@ -269,6 +269,14 @@ class ImportAttendance extends Page implements HasTable
             ]);
     }
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            AttendanceResource::getUrl('index') => 'Presensi',
+            'Import Presensi',
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         $actions = [];

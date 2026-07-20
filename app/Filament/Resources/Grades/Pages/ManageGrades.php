@@ -382,24 +382,32 @@ class ManageGrades extends Page implements HasTable
 
     protected function getPivotSubjects(): Collection
     {
-        $classIds = $this->getAccessibleClassIds();
-
-        $query = Subject::with('classes')->orderBy('name');
-
-        if (! empty($classIds)) {
-            $query->whereIn('class_id', $classIds);
+        if (! $this->class_id) {
+            return collect();
         }
 
-        return $query->get();
+        return Subject::with('classes')
+            ->where('class_id', $this->class_id)
+            ->orderBy('name')
+            ->get();
     }
 
     protected function buildPivotTable(Table $table): Table
     {
+        if (! $this->class_id) {
+            return $table
+                ->query(Grade::query()->whereRaw('0 = 1'))
+                ->columns([
+                    TextColumn::make('_placeholder')
+                        ->label(''),
+                ])
+                ->emptyStateHeading('Pilih Kelas')
+                ->emptyStateDescription('Gunakan filter kelas untuk memilih kelas yang akan ditampilkan.')
+                ->emptyStateIcon('heroicon-o-funnel');
+        }
+
         $subjects = $this->getPivotSubjects();
         $this->pivotSubjects = $subjects;
-
-        $nameCounts = $subjects->countBy(fn (Subject $s): string => $s->name);
-        $needsDisambiguation = $nameCounts->some(fn (int $count): bool => $count > 1);
 
         $columns = [
             TextColumn::make('learner_name')
@@ -416,16 +424,9 @@ class ManageGrades extends Page implements HasTable
 
         foreach ($subjects as $subject) {
             $subjectId = $subject->id;
-            $label = $subject->name;
-            if ($needsDisambiguation && $nameCounts[$subject->name] > 1) {
-                $className = $subject->relationLoaded('classes') && $subject->classes
-                    ? $subject->classes->name
-                    : ('Kelas '.$subject->class_id);
-                $label .= ' ('.$className.')';
-            }
 
             $columns[] = TextColumn::make("subject_{$subjectId}")
-                ->label($label)
+                ->label($subject->name)
                 ->alignCenter()
                 ->sortable()
                 ->state(function (mixed $record) use ($subjectId): string {
@@ -451,11 +452,9 @@ class ManageGrades extends Page implements HasTable
 
     protected function getPivotQuery(): Builder
     {
-        $classIds = $this->getAccessibleClassIds();
-
-        if (empty($classIds) && ! Filament::auth()->user()->hasRole('admin')) {
-            return Grade::query()->whereRaw('0 = 1');
-        }
+        $learnerIds = ClassLearner::where('class_id', $this->class_id)
+            ->when($this->academic_year_id, fn ($q) => $q->where('academic_year_id', $this->academic_year_id))
+            ->pluck('learner_id');
 
         $subjectIds = $this->getPivotSubjects()->pluck('id');
         $subjectCasts = $subjectIds->map(fn ($id) => "MAX(CASE WHEN g.subject_id = {$id} THEN g.final_score END) as subject_{$id}")->implode(', ');
@@ -471,13 +470,10 @@ class ManageGrades extends Page implements HasTable
             ->join('learners as l', 'l.id', '=', 'g.learner_id')
             ->join('academic_years as ay', 'ay.id', '=', 'g.academic_year_id')
             ->join('semesters as s', 's.id', '=', 'g.semester_id')
+            ->whereIn('g.learner_id', $learnerIds)
             ->when($this->academic_year_id, fn ($q) => $q->where('g.academic_year_id', $this->academic_year_id))
             ->when($this->semester_id, fn ($q) => $q->where('g.semester_id', $this->semester_id))
             ->where('ay.is_archived', false)
-            ->when(! empty($classIds), function ($q) use ($classIds) {
-                $learnerIds = ClassLearner::whereIn('class_id', $classIds)->pluck('learner_id');
-                $q->whereIn('g.learner_id', $learnerIds);
-            })
             ->groupBy('l.id', 'l.nis', 'l.name', 'ay.id', 'ay.name', 's.id', 's.name');
 
         return Grade::query()
@@ -496,11 +492,13 @@ class ManageGrades extends Page implements HasTable
 
     public function exportPivot(): StreamedResponse
     {
-        $classIds = $this->getAccessibleClassIds();
-
-        if (empty($classIds) && ! Filament::auth()->user()->hasRole('admin')) {
-            abort(403);
+        if (! $this->class_id) {
+            abort(400, 'Pilih kelas terlebih dahulu.');
         }
+
+        $learnerIds = ClassLearner::where('class_id', $this->class_id)
+            ->when($this->academic_year_id, fn ($q) => $q->where('academic_year_id', $this->academic_year_id))
+            ->pluck('learner_id');
 
         $exportSubjectIds = $this->getPivotSubjects()->pluck('id');
         $records = DB::table('grades', 'g')
@@ -514,20 +512,17 @@ class ManageGrades extends Page implements HasTable
             ->join('learners as l', 'l.id', '=', 'g.learner_id')
             ->join('academic_years as ay', 'ay.id', '=', 'g.academic_year_id')
             ->join('semesters as s', 's.id', '=', 'g.semester_id')
+            ->whereIn('g.learner_id', $learnerIds)
             ->when($this->academic_year_id, fn ($q) => $q->where('g.academic_year_id', $this->academic_year_id))
             ->when($this->semester_id, fn ($q) => $q->where('g.semester_id', $this->semester_id))
             ->where('ay.is_archived', false)
-            ->when(! empty($classIds), function ($q) use ($classIds) {
-                $learnerIds = ClassLearner::whereIn('class_id', $classIds)->pluck('learner_id');
-                $q->whereIn('g.learner_id', $learnerIds);
-            })
             ->groupBy('l.id', 'l.nis', 'l.name', 'ay.id', 'ay.name', 's.id', 's.name')
             ->orderBy('l.name')
             ->get();
 
         $academicYearName = $this->academic_year_id ? AcademicYear::find($this->academic_year_id)?->name : 'all';
         $semesterName = $this->semester_id ? Semester::find($this->semester_id)?->name : 'all';
-        $className = $this->class_id ? Classes::find($this->class_id)?->name : 'all';
+        $className = Classes::find($this->class_id)?->name ?? 'all';
 
         return app(ExcelService::class)->exportPivotGrades(
             $records,

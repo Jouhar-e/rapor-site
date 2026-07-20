@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\AcademicYear;
 use App\Models\Attendance;
-use App\Models\Classes;
 use App\Models\ClassLearner;
 use App\Models\Grade;
 use App\Models\HomeroomNote;
@@ -130,19 +129,7 @@ class ImportService
                 continue;
             }
 
-            $class = null;
-            if (! empty($row['class_name'])) {
-                $class = Classes::where('name', $row['class_name'])->first();
-
-                if (! $class) {
-                    $skipped++;
-                    $errors[] = ['row' => $index + 1, 'errors' => ['class_name' => ['Kelas "'.$row['class_name'].'" tidak ditemukan.']]];
-
-                    continue;
-                }
-            }
-
-            $learnerData = collect($row)->except(['class_name'])->toArray();
+            $learnerData = $row;
 
             foreach (['birth_date', 'admission_date'] as $dateField) {
                 if (empty($learnerData[$dateField])) {
@@ -154,10 +141,6 @@ class ImportService
                 if (isset($learnerData[$intField]) && ($learnerData[$intField] === '' || $learnerData[$intField] === '-')) {
                     $learnerData[$intField] = null;
                 }
-            }
-
-            if ($class) {
-                $learnerData['program_id'] = $class->program_id;
             }
 
             $learner = $this->learner->where('nis', $row['nis'])->first();
@@ -558,7 +541,6 @@ class ImportService
                 'nis' => 'required|string',
                 'nisn' => 'string',
                 'name' => 'required|string',
-                'class_name' => 'string',
             ],
             'grade' => [
                 'learner_id' => 'integer|exists:learners,id',
@@ -637,8 +619,8 @@ class ImportService
             ],
             'learner' => [
                 'nis', 'nisn', 'name', 'gender', 'birth_place',
-                'birth_date', 'address', 'status', 'class_name',
-                'religion', 'child_order', 'phone', 'admission_date',
+                'birth_date', 'address', 'status', 'religion',
+                'child_order', 'phone', 'admission_date',
                 'admission_class', 'admission_status', 'father_name',
                 'father_job', 'mother_name', 'mother_job', 'guardian_name',
                 'guardian_job', 'report_number',

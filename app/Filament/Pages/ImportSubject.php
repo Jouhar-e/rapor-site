@@ -278,6 +278,14 @@ class ImportSubject extends Page implements HasTable
         return app(ExcelService::class)->downloadSubjectTemplate();
     }
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            SubjectResource::getUrl('index') => 'Mata Pelajaran',
+            'Import Mata Pelajaran',
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         return [

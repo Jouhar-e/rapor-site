@@ -8,6 +8,7 @@ use App\Models\HomeroomNote;
 use App\Models\Learner;
 use App\Models\LearnerExtracurricular;
 use App\Models\Semester;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\Page;
 
 class LearnerProfile extends Page
@@ -19,6 +20,25 @@ class LearnerProfile extends Page
     public Learner $learner;
 
     public ?int $semester_id = null;
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            LearnerResource::getUrl('index') => 'Peserta Didik',
+            $this->learner->name,
+        ];
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('back')
+                ->label('Kembali')
+                ->icon('heroicon-o-arrow-left')
+                ->url(fn (): string => LearnerResource::getUrl('index'))
+                ->color('gray'),
+        ];
+    }
 
     public function mount($record): void
     {

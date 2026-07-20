@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAcademicYearScope;
 use Database\Factories\ClassLearnerFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['learner_id', 'class_id', 'academic_year_id', 'semester_id'])]
 class ClassLearner extends Model
 {
+    use HasAcademicYearScope;
+
     /** @use HasFactory<ClassLearnerFactory> */
     use HasFactory;
 

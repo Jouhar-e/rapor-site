@@ -39,6 +39,14 @@ class ExploreClasses extends Page
     // INI ADALAH VARIABEL YANG MEMBUAT ERROR JIKA TIDAK ADA DI SERVER
     public bool $expandAll = false;
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            url('/admin') => 'Beranda',
+            'Eksplorasi Kelas',
+        ];
+    }
+
     public function mount(): void
     {
         $this->buildTree();

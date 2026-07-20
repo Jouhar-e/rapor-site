@@ -43,6 +43,14 @@ class ManageLearnerExtracurricularPivot extends Page implements HasTable
 
     public ?int $extracurricular_id = null;
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            LearnerExtracurricularResource::getUrl('manage') => 'Nilai Ekstrakurikuler',
+            'Rekap Ekstrakurikuler',
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         return [

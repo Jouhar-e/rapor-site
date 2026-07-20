@@ -16,7 +16,7 @@ class ManageLearnerExtracurriculars extends ManageRecords
     {
         return [
             Action::make('back')
-                ->label('Kembali ke Tabel Ekstrakurikuler')
+                ->label('Kembali')
                 ->icon('heroicon-o-arrow-left')
                 ->url(fn (): string => LearnerExtracurricularResource::getUrl('index'))
                 ->color('gray'),

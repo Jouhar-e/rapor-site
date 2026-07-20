@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAcademicYearScope;
 use Database\Factories\SemesterFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class Semester extends Model
 {
+    use HasAcademicYearScope;
+
     /** @use HasFactory<SemesterFactory> */
     use HasFactory;
 

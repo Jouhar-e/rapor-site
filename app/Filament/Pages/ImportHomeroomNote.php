@@ -265,6 +265,14 @@ class ImportHomeroomNote extends Page implements HasTable
             ]);
     }
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            HomeroomNoteResource::getUrl('index') => 'Catatan Wali Kelas',
+            'Import Catatan Wali Kelas',
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         $actions = [];

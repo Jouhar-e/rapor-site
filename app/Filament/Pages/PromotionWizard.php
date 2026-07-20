@@ -47,6 +47,17 @@ class PromotionWizard extends Page
         ];
     }
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('back')
+                ->label('Kembali')
+                ->icon('heroicon-o-arrow-left')
+                ->url(fn (): string => url('/admin'))
+                ->color('gray'),
+        ];
+    }
+
     public static function canAccess(): bool
     {
         return auth()->user()->can('promotion.view');

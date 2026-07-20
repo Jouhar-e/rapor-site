@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAcademicYearScope;
 use Database\Factories\AttendanceFactory;
 use Illuminate\Database\Eloquent\Attributes\Cast;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Cast('absent', 'integer')]
 class Attendance extends Model
 {
+    use HasAcademicYearScope;
+
     /** @use HasFactory<AttendanceFactory> */
     use HasFactory;
 

@@ -5,7 +5,7 @@
                 Upload File CSV
             </x-slot>
             <x-slot name="description">
-                Kolom: nis, nisn, name, gender, birth_place, birth_date, address, status, class_name
+                Kolom: nis, nisn, name, gender, birth_place, birth_date, address, status
             </x-slot>
 
             <form wire:submit="preview">

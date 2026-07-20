@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Classes;
 
 use App\Filament\Resources\Classes\Pages\ManageClasses;
+use App\Filament\Resources\Classes\Pages\ManageClassLearners;
+use App\Filament\Resources\Classes\Pages\ManageClassSubjects;
 use App\Models\Classes;
 use App\Models\Phase;
 use App\Models\Subject;
@@ -24,6 +26,7 @@ use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class ClassesResource extends Resource
@@ -166,6 +169,16 @@ class ClassesResource extends Resource
                 //
             ])
             ->recordActions([
+                Action::make('manageLearners')
+                    ->label('Peserta Didik')
+                    ->icon('heroicon-o-users')
+                    ->color('success')
+                    ->url(fn (Model $record): string => route('filament.admin.resources.classes.learners', $record)),
+                Action::make('manageSubjects')
+                    ->label('Mata Pelajaran')
+                    ->icon('heroicon-o-book-open')
+                    ->color('warning')
+                    ->url(fn (Model $record): string => route('filament.admin.resources.classes.subjects', $record)),
                 EditAction::make()
                     ->mutateDataUsing(function (array $data): array {
                         $classNum = '';
@@ -260,6 +273,8 @@ class ClassesResource extends Resource
     {
         return [
             'index' => ManageClasses::route('/'),
+            'learners' => ManageClassLearners::route('/{record}/learners'),
+            'subjects' => ManageClassSubjects::route('/{record}/subjects'),
         ];
     }
 }

@@ -92,7 +92,7 @@ class ImportLearner extends Page implements HasTable
         $headers = array_map('strval', array_map('trim', $rows[0]));
         array_shift($rows);
 
-        $required = ['nis', 'nisn', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'status', 'class_name', 'religion', 'child_order', 'phone', 'admission_date', 'admission_class', 'admission_status', 'father_name', 'father_job', 'mother_name', 'mother_job', 'guardian_name', 'guardian_job', 'report_number'];
+        $required = ['nis', 'nisn', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'status', 'religion', 'child_order', 'phone', 'admission_date', 'admission_class', 'admission_status', 'father_name', 'father_job', 'mother_name', 'mother_job', 'guardian_name', 'guardian_job', 'report_number'];
 
         $missing = array_diff($required, $headers);
         if (! empty($missing)) {
@@ -145,7 +145,6 @@ class ImportLearner extends Page implements HasTable
                 'birth_date' => $row['birth_date'] ?? '',
                 'address' => $row['address'] ?? '',
                 'status' => $row['status'] ?? '',
-                'class_name' => $row['class_name'] ?? '',
                 'religion' => $row['religion'] ?? null,
                 'child_order' => $row['child_order'] ?? null,
                 'phone' => $row['phone'] ?? null,
@@ -243,6 +242,14 @@ class ImportLearner extends Page implements HasTable
         return app(ExcelService::class)->downloadLearnerTemplate();
     }
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            LearnerResource::getUrl('index') => 'Peserta Didik',
+            'Import Peserta Didik',
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -250,7 +257,7 @@ class ImportLearner extends Page implements HasTable
                 ->label('Unduh Format Excel')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action('downloadTemplate')
-                ->color('gray'),
+                ->color('success'),
             Action::make('back')
                 ->label('Kembali ke Data Peserta Didik')
                 ->icon('heroicon-o-arrow-left')

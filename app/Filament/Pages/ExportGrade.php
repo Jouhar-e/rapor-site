@@ -115,6 +115,14 @@ class ExportGrade extends Page
         );
     }
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            GradeResource::getUrl('index') => 'Nilai',
+            'Ekspor Nilai',
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -581,7 +581,7 @@ class ExcelService
     {
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
-        $headers = ['nis', 'nisn', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'status', 'class_name', 'religion', 'child_order', 'phone', 'admission_date', 'admission_class', 'admission_status', 'father_name', 'father_job', 'mother_name', 'mother_job', 'guardian_name', 'guardian_job', 'report_number'];
+        $headers = ['nis', 'nisn', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'status', 'religion', 'child_order', 'phone', 'admission_date', 'admission_class', 'admission_status', 'father_name', 'father_job', 'mother_name', 'mother_job', 'guardian_name', 'guardian_job', 'report_number'];
 
         foreach ($headers as $i => $header) {
             $col = Coordinate::stringFromColumnIndex($i + 1);
@@ -589,7 +589,7 @@ class ExcelService
             $sheet->getStyle($col.'1')->getFont()->setBold(true);
         }
 
-        foreach (range('A', 'V') as $col) {
+        foreach (range('A', 'U') as $col) {
             $sheet->getColumnDimension($col)->setWidth(18);
         }
 
@@ -601,17 +601,16 @@ class ExcelService
         $sheet->setCellValue('F2', '2010-05-10');
         $sheet->setCellValue('G2', 'Jl. Merdeka No.1');
         $sheet->setCellValue('H2', 'aktif');
-        $sheet->setCellValue('I2', 'Kelas X.1');
-        $sheet->setCellValue('J2', 'Islam');
-        $sheet->setCellValue('K2', '1');
-        $sheet->setCellValue('L2', '08123456789');
-        $sheet->setCellValue('M2', '2024-07-15');
-        $sheet->setCellValue('N2', 'Paket A');
-        $sheet->setCellValue('O2', 'baru');
-        $sheet->setCellValue('P2', 'Ahmad');
-        $sheet->setCellValue('Q2', 'Petani');
-        $sheet->setCellValue('R2', 'Siti');
-        $sheet->setCellValue('S2', 'Ibu Rumah Tangga');
+        $sheet->setCellValue('I2', 'Islam');
+        $sheet->setCellValue('J2', '1');
+        $sheet->setCellValue('K2', '08123456789');
+        $sheet->setCellValue('L2', '2024-07-15');
+        $sheet->setCellValue('M2', 'Paket A');
+        $sheet->setCellValue('N2', 'baru');
+        $sheet->setCellValue('O2', 'Ahmad');
+        $sheet->setCellValue('P2', 'Petani');
+        $sheet->setCellValue('Q2', 'Siti');
+        $sheet->setCellValue('R2', 'Ibu Rumah Tangga');
 
         $response = new StreamedResponse(function () use ($spreadsheet) {
             $writer = new Xlsx($spreadsheet);

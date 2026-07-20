@@ -44,6 +44,14 @@ class ManageGradePivot extends Page implements HasTable
 
     public Collection $subjects;
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            GradeResource::getUrl('index') => 'Nilai',
+            'Rekap Nilai',
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -107,7 +107,7 @@
 
             {{-- Attendance Summary --}}
             <x-filament::section heading="Ringkasan Absensi" icon="heroicon-o-clipboard-document-check" collapsible>
-                @if ($attendanceSummary['total'] === 0 && !$attendance->isNotEmpty())
+                @if ($attendanceSummary['total'] === 0)
                     <p style="font-size: 0.875rem; color: #9ca3af; text-align: center; padding: 1rem;">Belum ada data absensi.</p>
                 @else
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
