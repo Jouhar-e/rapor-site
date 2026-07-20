@@ -53,7 +53,7 @@ class ManageClassLearners extends Page
 
     public bool $hasMoreAvailable = false;
 
-    public int $classCapacity = 40;
+    public int $classCapacity = 50;
 
     public function mount($record): void
     {
