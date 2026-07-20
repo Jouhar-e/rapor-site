@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\AcademicYear;
 use App\Models\Attendance;
-use App\Models\ClassLearner;
 use App\Models\Grade;
 use App\Models\HomeroomNote;
 use App\Models\Learner;
@@ -157,16 +156,6 @@ class ImportService
                 $imported++;
             }
 
-            if ($class && $activeAcademicYear) {
-                ClassLearner::updateOrCreate(
-                    [
-                        'learner_id' => $learner->id,
-                        'class_id' => $class->id,
-                        'academic_year_id' => $activeAcademicYear->id,
-                    ],
-                    [],
-                );
-            }
         }
 
         app(AuditService::class)->logImport('learner', $imported, $updated, $skipped, $errors);
@@ -538,6 +527,7 @@ class ImportService
                 'password' => 'string',
             ],
             'learner' => [
+                'program_id' => 'required|integer|exists:programs,id',
                 'nis' => 'required|string',
                 'nisn' => 'string',
                 'name' => 'required|string',
@@ -618,7 +608,7 @@ class ImportService
                 'address', 'phone', 'email', 'is_active',
             ],
             'learner' => [
-                'nis', 'nisn', 'name', 'gender', 'birth_place',
+                'program_id', 'nis', 'nisn', 'name', 'gender', 'birth_place',
                 'birth_date', 'address', 'status', 'religion',
                 'child_order', 'phone', 'admission_date',
                 'admission_class', 'admission_status', 'father_name',
