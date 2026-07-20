@@ -4,11 +4,13 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\Learners\LearnerResource;
 use App\Models\ImportHistory;
+use App\Models\Program;
 use App\Services\ExcelService;
 use App\Services\ImportService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -92,7 +94,7 @@ class ImportLearner extends Page implements HasTable
         $headers = array_map('strval', array_map('trim', $rows[0]));
         array_shift($rows);
 
-        $required = ['program_id', 'nis', 'nisn', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'status', 'religion', 'child_order', 'phone', 'admission_date', 'admission_class', 'admission_status', 'father_name', 'father_job', 'mother_name', 'mother_job', 'guardian_name', 'guardian_job', 'report_number'];
+        $required = ['nis', 'nisn', 'name', 'gender', 'birth_place', 'birth_date', 'address', 'status', 'religion', 'child_order', 'phone', 'admission_date', 'admission_class', 'admission_status', 'father_name', 'father_job', 'mother_name', 'mother_job', 'guardian_name', 'guardian_job', 'report_number'];
 
         $missing = array_diff($required, $headers);
         if (! empty($missing)) {
@@ -129,15 +131,30 @@ class ImportLearner extends Page implements HasTable
     {
         $records = session('import_learner_data', []);
         $headers = session('import_learner_headers', []);
+        $hasProgramId = in_array('program_id', $headers);
 
         if (empty($records)) {
             return;
         }
 
+        if (! $hasProgramId) {
+            $defaultProgram = Program::where('is_active', true)->first();
+
+            if (! $defaultProgram) {
+                Notification::make()
+                    ->danger()
+                    ->title('Import gagal')
+                    ->body('Tidak ada program aktif. Tambahkan data program terlebih dahulu.')
+                    ->send();
+
+                return;
+            }
+        }
+
         $mapped = [];
         foreach ($records as $row) {
             $mapped[] = [
-                'program_id' => $row['program_id'] ?? null,
+                'program_id' => $hasProgramId ? ($row['program_id'] ?? $defaultProgram->id) : $defaultProgram->id,
                 'nis' => $row['nis'] ?? '',
                 'nisn' => $row['nisn'] ?? '',
                 'name' => $row['name'] ?? '',

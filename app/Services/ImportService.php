@@ -527,7 +527,7 @@ class ImportService
                 'password' => 'string',
             ],
             'learner' => [
-                'program_id' => 'required|integer|exists:programs,id',
+                'program_id' => 'integer|exists:programs,id',
                 'nis' => 'required|string',
                 'nisn' => 'string',
                 'name' => 'required|string',
