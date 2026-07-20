@@ -72,6 +72,8 @@ class AppServiceProvider extends ServiceProvider
         foreach ($models as $model) {
             $model::observe(AuditLogObserver::class);
         }
-        URL::forceScheme('https');
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
