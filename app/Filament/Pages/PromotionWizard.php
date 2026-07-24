@@ -34,11 +34,6 @@ class PromotionWizard extends Page
 
     protected static ?string $title = 'Kenaikan Kelas';
 
-    public static function canAccess(): bool
-    {
-        return auth()->user()->hasRole('admin');
-    }
-
     protected ?string $heading = 'Kenaikan Kelas';
 
     protected string $view = 'filament.pages.promotion-wizard';
@@ -65,7 +60,7 @@ class PromotionWizard extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()->can('promotion.view');
+        return auth()->user()->hasRole('admin');
     }
 
     public ?array $data = [];
