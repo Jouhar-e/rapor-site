@@ -3,10 +3,15 @@
 namespace App\Filament\Resources\Classes\Pages;
 
 use App\Filament\Resources\Classes\ClassesResource;
-use App\Filament\Resources\Subjects\SubjectResource;
 use App\Models\Classes;
 use App\Models\Subject;
+use App\Models\SubjectGroup;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -33,9 +38,8 @@ class ManageClassSubjects extends Page implements HasTable
     public function getBreadcrumbs(): array
     {
         return [
-            // Format yang benar:
             ClassesResource::getUrl('index') => 'Kelas',
-            'Mata Pelajaran', // Judul halaman ini
+            'Ubah Mata Pelajaran',
         ];
     }
 
@@ -48,9 +52,7 @@ class ManageClassSubjects extends Page implements HasTable
             ->columns([
                 TextColumn::make('name')
                     ->label('Mata Pelajaran')
-                    ->searchable()
-                    ->url(fn (Subject $record): string => SubjectResource::getUrl('index'))
-                    ->openUrlInNewTab(),
+                    ->searchable(),
                 TextColumn::make('code')
                     ->label('Kode')
                     ->searchable(),
@@ -64,14 +66,44 @@ class ManageClassSubjects extends Page implements HasTable
                     ->formatStateUsing(fn (bool $state): string => $state ? 'Aktif' : 'Nonaktif'),
             ])
             ->recordActions([
-                Action::make('openSubject')
-                    ->label('Buka di Manajemen Mata Pelajaran')
-                    ->icon('heroicon-o-arrow-top-right-on-square')
-                    ->url(fn (Subject $record): string => SubjectResource::getUrl('index'))
-                    ->openUrlInNewTab(),
+                Action::make('editSubject')
+                    ->label('Ubah')
+                    ->icon('heroicon-o-pencil')
+                    ->form([
+                        Select::make('subject_group_id')
+                            ->label('Kelompok Mata Pelajaran')
+                            ->options(fn () => SubjectGroup::where('is_active', true)->pluck('name', 'id'))
+                            ->placeholder('Pilih Kelompok'),
+                        TextInput::make('code')
+                            ->label('Kode')
+                            ->required()
+                            ->maxLength(255),
+                        TextInput::make('name')
+                            ->label('Nama Mata Pelajaran')
+                            ->required()
+                            ->maxLength(255),
+                        Textarea::make('description')
+                            ->label('Keterangan')
+                            ->default(null)
+                            ->columnSpanFull(),
+                        Toggle::make('is_active')
+                            ->label('Aktif')
+                            ->default(true),
+                    ])
+                    ->fillForm(fn (Subject $record): array => $record->toArray())
+                    ->action(function (Subject $record, array $data): void {
+                        $record->update($data);
+
+                        Notification::make()
+                            ->title('Berhasil')
+                            ->body('Mata pelajaran berhasil diperbarui.')
+                            ->success()
+                            ->send();
+                    })
+                    ->modalWidth('lg'),
             ])
             ->emptyStateHeading('Belum ada mata pelajaran')
-            ->emptyStateDescription('Kelas ini belum memiliki mata pelajaran. Tambahkan mata pelajaran melalui form edit kelas atau menu Manajemen Mata Pelajaran.')
+            ->emptyStateDescription('Kelas ini belum memiliki mata pelajaran. Tambahkan melalui menu Manajemen Mata Pelajaran.')
             ->emptyStateIcon('heroicon-o-book-open');
     }
 
