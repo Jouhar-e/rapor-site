@@ -188,11 +188,7 @@ class ManageAttendancePivot extends Page implements HasTable
         $user = Filament::auth()->user();
         $classIds = HomeroomTeacher::where('user_id', $user->id)->pluck('class_id');
 
-        if ($classIds->isEmpty() && ! $user->hasRole('admin')) {
-            return Attendance::query()->whereRaw('0 = 1');
-        }
-
-        return Attendance::query()
+        $query = Attendance::query()
             ->select([
                 'l.name as learner_name',
                 'ay.name as academic_year',
@@ -206,11 +202,16 @@ class ManageAttendancePivot extends Page implements HasTable
             ->join('academic_years as ay', 'ay.id', '=', 'a.academic_year_id')
             ->join('semesters as s', 's.id', '=', 'a.semester_id')
             ->when($this->academic_year_id, fn ($q, $v) => $q->where('a.academic_year_id', $v))
-            ->when($this->semester_id, fn ($q, $v) => $q->where('a.semester_id', $v))
-            ->when($classIds->isNotEmpty(), function ($q) use ($classIds) {
-                $learnerIds = ClassLearner::whereIn('class_id', $classIds)->pluck('learner_id');
-                $q->whereIn('a.learner_id', $learnerIds);
-            });
+            ->when($this->semester_id, fn ($q, $v) => $q->where('a.semester_id', $v));
+
+        if ($classIds->isEmpty() && ! $user->hasRole('admin')) {
+            return $query->whereRaw('0 = 1');
+        }
+
+        return $query->when($classIds->isNotEmpty(), function ($q) use ($classIds) {
+            $learnerIds = ClassLearner::whereIn('class_id', $classIds)->pluck('learner_id');
+            $q->whereIn('a.learner_id', $learnerIds);
+        });
     }
 
     public function getTableRecordKey(Model|array $record): string
