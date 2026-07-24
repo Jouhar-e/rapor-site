@@ -9,7 +9,7 @@
             <div style="display: flex; align-items: center; gap: 1rem;">
                 {{-- Kotak Ikon (Warna Biru - Info) --}}
                 <div style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: 0.75rem; background-color: #dbeafe; color: #2563eb; border: 1px solid #bfdbfe;">
-                    <x-heroicon-o-clipboard-document-check style="width: 24px; height: 24px;" />
+                    <x-filament::icon icon="heroicon-o-clipboard-document-check" style="width: 24px; height: 24px;" />
                 </div>
 
                 {{-- Judul --}}

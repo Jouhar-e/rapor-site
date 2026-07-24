@@ -10,10 +10,17 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Auth;
 
 class EditProfile extends BaseEditProfile
 {
+    // Memaksa lebar halaman menjadi penuh (Full)
+    public function getMaxContentWidth(): Width|string|null
+    {
+        return Width::FourExtraLarge;
+    }
+
     public function form(Schema $schema): Schema
     {
         $tutor = Tutor::where('user_id', Auth::id())->first();

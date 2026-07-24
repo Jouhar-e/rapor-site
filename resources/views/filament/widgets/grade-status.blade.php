@@ -4,7 +4,7 @@
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <div style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 0.75rem; background-color: #d1fae5; color: #059669; border: 1px solid #a7f3d0;">
-                    <x-heroicon-o-check-badge style="width: 20px; height: 20px;" />
+                    <x-filament::icon icon="heroicon-o-check-badge" style="width: 20px; height: 20px;" />
                 </div>
                 <div>
                     <h3 style="font-size: 1rem; font-weight: 600; color: #111827; margin: 0;">

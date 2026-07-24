@@ -21,7 +21,7 @@
 
                 {{-- Ikon Bulat Kecil --}}
                 <div style="margin-top: 0.125rem; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 9999px; background-color: #f3f4f6; color: #6b7280; flex-shrink: 0; border: 1px solid #e5e7eb;">
-                    <x-heroicon-o-bolt style="width: 16px; height: 16px;" />
+                    <x-filament::icon icon="heroicon-o-bolt" style="width: 16px; height: 16px;" />
                 </div>
 
                 {{-- Detail Aktivitas --}}

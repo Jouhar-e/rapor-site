@@ -9,7 +9,7 @@
             <div style="display: flex; align-items: center; gap: 1rem;">
                 {{-- Kotak Ikon (Warna Hijau - Success) --}}
                 <div style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: 0.75rem; background-color: #d1fae5; color: #059669; border: 1px solid #a7f3d0;">
-                    <x-heroicon-o-academic-cap style="width: 24px; height: 24px;" />
+                    <x-filament::icon icon="heroicon-o-academic-cap" style="width: 24px; height: 24px;" />
                 </div>
 
                 {{-- Judul --}}

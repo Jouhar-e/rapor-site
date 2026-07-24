@@ -1,40 +1,42 @@
 <x-filament-widgets::widget>
-    <x-filament::section>
+    <x-filament::section class="h-full">
 
         {{-- ==============================
              BAGIAN ATAS: LOGO & SAPAAN
              ============================== --}}
-        <div style="display: flex; align-items: center; gap: 1rem;">
+        <div class="flex items-center gap-4">
 
             {{-- Logo Sekolah --}}
             @php
-            $logoPath = !empty($school?->logo) ? storage_path('app/private/' . $school->logo) : null;
-            $logoBase64 = null;
+                $logoPath = !empty($school?->logo) ? storage_path('app/private/' . $school->logo) : null;
+                $logoBase64 = null;
 
-            if ($logoPath && file_exists($logoPath)) {
-            $mime = mime_content_type($logoPath);
-            $data = base64_encode(file_get_contents($logoPath));
-            $logoBase64 = "data:{$mime};base64,{$data}";
-            }
+                if ($logoPath && file_exists($logoPath)) {
+                    $mime = mime_content_type($logoPath);
+                    $data = base64_encode(file_get_contents($logoPath));
+                    $logoBase64 = "data:{$mime};base64,{$data}";
+                }
             @endphp
 
             @if ($logoBase64)
-            <img
-                src="{{ $logoBase64 }}"
-                alt="Logo {{ $school->name }}"
-                style="width: 60px; height: 60px; border-radius: 0.5rem; object-fit: cover; border: 1px solid #e5e7eb;" />
+                <img src="{{ $logoBase64 }}" alt="Logo {{ $school->name }}"
+                    style="width: 60px; height: 60px; min-width: 60px; min-height: 60px; max-width: 60px; max-height: 60px; object-fit: cover;"
+                    class="rounded-lg ring-1 ring-gray-200 dark:ring-gray-700" />
             @else
-            <div style="width: 60px; height: 60px; border-radius: 0.5rem; background-color: #f3f4f6; display: flex; align-items: center; justify-content: center;">
-                <x-heroicon-o-building-library style="width: 30px; height: 30px; color: #9ca3af;" />
-            </div>
+                <div style="width: 60px; height: 60px; min-width: 60px; min-height: 60px;"
+                    class="flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700">
+                    <x-filament::icon icon="heroicon-o-building-library"
+                        style="width: 32px; height: 32px; min-width: 32px; min-height: 32px;"
+                        class="text-gray-400 dark:text-gray-500" />
+                </div>
             @endif
 
             {{-- Teks Sapaan --}}
-            <div style="flex: 1;">
-                <h2 style="font-size: 1.5rem; font-weight: 600; margin: 0; line-height: 1.2;">
-                    👋 {{ $greeting }}, {{ $user->name }}
+            <div class="flex-1 min-w-0">
+                <h2 class="m-0 text-2xl font-semibold leading-tight text-gray-900 dark:text-white">
+                    {{ $greeting }}, {{ $user->name }}
                 </h2>
-                <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.875rem;">
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     Selamat datang di Dashboard Sistem Informasi Rapot.
                 </p>
             </div>
@@ -44,48 +46,55 @@
         {{-- ==============================
              BAGIAN BAWAH: INFORMASI AKADEMIK
              ============================== --}}
-        <div style="margin-top: 1.25rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; background-color: #f9fafb; padding: 0.75rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; color: #4b5563; border: 1px solid #e5e7eb;">
+        <div
+            class="flex flex-wrap items-center gap-4 px-4 py-3 mt-5 text-sm font-medium bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg">
 
             {{-- Tahun Ajaran --}}
             @if ($academicYear)
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <x-heroicon-o-academic-cap style="width: 20px; height: 20px; color: #3b82f6;" />
-                <span>TA: <strong>{{ $academicYear }}</strong></span>
-            </div>
-            <span style="color: #d1d5db;">|</span>
+                <div class="flex items-center gap-2">
+                    <x-filament::icon icon="heroicon-o-academic-cap"
+                        style="width: 20px; height: 20px; min-width: 20px; min-height: 20px;"
+                        class="text-blue-500 dark:text-blue-400" />
+                    <span class="text-gray-600 dark:text-gray-300">TA: <strong
+                            class="text-gray-900 dark:text-white">{{ $academicYear }}</strong></span>
+                </div>
+                <span class="text-gray-300 dark:text-gray-600">|</span>
             @endif
 
             {{-- Semester --}}
             @if ($semester)
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <x-heroicon-o-book-open style="width: 20px; height: 20px; color: #3b82f6;" />
-                <span>Semester: <strong>{{ $semester }}</strong></span>
-            </div>
-            <span style="color: #d1d5db;">|</span>
+                <div class="flex items-center gap-2">
+                    <x-filament::icon icon="heroicon-o-book-open"
+                        style="width: 20px; height: 20px; min-width: 20px; min-height: 20px;"
+                        class="text-blue-500 dark:text-blue-400" />
+                    <span class="text-gray-600 dark:text-gray-300">Semester: <strong
+                            class="text-gray-900 dark:text-white">{{ $semester }}</strong></span>
+                </div>
+                <span class="text-gray-300 dark:text-gray-600">|</span>
             @endif
 
             {{-- Tanggal --}}
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <x-heroicon-o-calendar style="width: 20px; height: 20px; color: #3b82f6;" />
-                <span>{{ $date }}</span>
+            <div class="flex items-center gap-2">
+                <x-filament::icon icon="heroicon-o-calendar"
+                    style="width: 20px; height: 20px; min-width: 20px; min-height: 20px;"
+                    class="text-blue-500 dark:text-blue-400" />
+                <span class="text-gray-600 dark:text-gray-300">{{ $date }}</span>
             </div>
 
-            <span style="color: #d1d5db;">|</span>
+            <span class="text-gray-300 dark:text-gray-600">|</span>
 
             {{-- Jam (Live dengan Alpine.js) --}}
-            <div
-                style="display: flex; align-items: center; gap: 0.5rem;"
-                x-data="{ time: '{{ $time }}' }"
-                x-init="
-                    setInterval(() => {
-                        const now = new Date();
-                        const h = String(now.getHours()).padStart(2, '0');
-                        const m = String(now.getMinutes()).padStart(2, '0');
-                        time = h + '.' + m; // Menggunakan titik sesuai format PHP Anda
-                    }, 1000)
-                ">
-                <x-heroicon-o-clock style="width: 20px; height: 20px; color: #3b82f6;" />
-                <span><strong x-text="time"></strong> {{ $timezone }}</span>
+            <div class="flex items-center gap-2" x-data="{ time: '{{ $time }}' }" x-init="setInterval(() => {
+                const now = new Date();
+                const h = String(now.getHours()).padStart(2, '0');
+                const m = String(now.getMinutes()).padStart(2, '0');
+                time = h + '.' + m;
+            }, 1000)">
+                <x-filament::icon icon="heroicon-o-clock"
+                    style="width: 20px; height: 20px; min-width: 20px; min-height: 20px;"
+                    class="text-blue-500 dark:text-blue-400" />
+                <span class="text-gray-600 dark:text-gray-300"><strong class="text-gray-900 dark:text-white"
+                        x-text="time"></strong> {{ $timezone }}</span>
             </div>
 
         </div>
