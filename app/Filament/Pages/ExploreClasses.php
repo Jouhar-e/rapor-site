@@ -24,6 +24,11 @@ class ExploreClasses extends Page
 
     protected static ?string $title = 'Jelajahi Kelas';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()->hasRole('admin');
+    }
+
     public ?int $academic_year_id = null;
 
     public ?int $program_id = null;
