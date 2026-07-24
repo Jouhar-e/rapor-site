@@ -10,6 +10,8 @@ class ImportPreviewTableWidget extends Widget
 
     public array $data = [];
 
+    public array $headers = [];
+
     public function getColumnSpan(): int|string|array
     {
         return 'full';

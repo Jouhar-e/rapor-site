@@ -26,7 +26,7 @@
                 Preview Data (10 baris pertama)
             </x-slot>
 
-            @livewire(\App\Filament\Widgets\ImportPreviewTableWidget::class, ['data' => $previewData], key('preview-'.$previewKey))
+            @livewire(\App\Filament\Widgets\ImportPreviewTableWidget::class, ['data' => $previewData, 'headers' => array_keys($columnMap)], key('preview-'.$previewKey))
 
             <div class="flex gap-3" style="margin-top: 2rem !important;">
                 <x-filament::button wire:click="executeImport" color="primary">
