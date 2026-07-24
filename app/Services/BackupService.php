@@ -137,7 +137,25 @@ class BackupService
 
         if ($extension === 'sql') {
             $sql = file_get_contents($filePath);
+
+            $sql = preg_replace_callback(
+                '/^CREATE TABLE (?:IF NOT EXISTS )?`?(\w+)`?/m',
+                function (array $match): string {
+                    $tableName = $match[1];
+                    if (in_array($tableName, ['sessions', 'personal_access_tokens', 'cache', 'cache_locks'])) {
+                        return $match[0];
+                    }
+
+                    return "DROP TABLE IF EXISTS `{$tableName}`;\n{$match[0]}";
+                },
+                $sql
+            );
+
+            $sql = preg_replace('/^INSERT INTO `(sessions|personal_access_tokens|cache|cache_locks)` VALUES .*/m', '', $sql);
+
+            DB::statement('SET FOREIGN_KEY_CHECKS=0');
             DB::connection()->getPdo()->exec($sql);
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
             return true;
         }

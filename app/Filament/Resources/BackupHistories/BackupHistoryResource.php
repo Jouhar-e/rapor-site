@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\BackupHistories;
 
+use App\Filament\Pages\RestoreBackup;
 use App\Filament\Resources\BackupHistories\Pages\ManageBackupHistories;
 use App\Models\BackupHistory;
 use App\Services\AuditService;
@@ -72,9 +73,7 @@ class BackupHistoryResource extends Resource
             ->columns([
                 TextColumn::make('filename')
                     ->searchable(),
-                TextColumn::make('file_size')
-                    ->numeric()
-                    ->sortable(),
+
                 TextColumn::make('type')
                     ->searchable(),
                 TextColumn::make('status')
@@ -86,18 +85,19 @@ class BackupHistoryResource extends Resource
                         'pending' => 'gray',
                         default => 'gray',
                     }),
-                TextColumn::make('created_by')
-                    ->numeric()
+                TextColumn::make('created_at')
+                    ->label('Dibuat')
+                    ->dateTime()
                     ->sortable(),
+                TextColumn::make('file_size')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('started_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('completed_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -124,6 +124,44 @@ class BackupHistoryResource extends Resource
                         }
 
                         return Storage::disk('local')->download("backups/{$record->filename}");
+                    }),
+                Action::make('restore')
+                    ->label('Restore')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('warning')
+                    ->visible(fn (BackupHistory $record): bool => $record->status === 'completed' && $record->type === 'database')
+                    ->requiresConfirmation()
+                    ->modalHeading('Restore Database')
+                    ->modalDescription('Semua data saat ini akan diganti dengan data dari backup. Tindakan ini tidak dapat dibatalkan.')
+                    ->modalSubmitActionLabel('Ya, Restore')
+                    ->action(function (BackupHistory $record) {
+                        $filePath = Storage::disk('local')->path("backups/{$record->filename}");
+
+                        if (! file_exists($filePath)) {
+                            Notification::make()
+                                ->warning()
+                                ->title('File backup tidak ditemukan')
+                                ->send();
+
+                            return;
+                        }
+
+                        try {
+                            app(BackupService::class)->restore($filePath);
+                            app(AuditService::class)->logBackup('restore', $record->filename);
+
+                            Notification::make()
+                                ->success()
+                                ->title('Restore berhasil')
+                                ->body("Data berhasil direstore dari {$record->filename}")
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Restore gagal')
+                                ->body($e->getMessage())
+                                ->send();
+                        }
                     }),
                 DeleteAction::make(),
             ])
@@ -153,6 +191,11 @@ class BackupHistoryResource extends Resource
                                 ->send();
                         }
                     }),
+                Action::make('restoreBackup')
+                    ->label('Restore Backup')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('warning')
+                    ->url(fn (): string => RestoreBackup::getUrl()),
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

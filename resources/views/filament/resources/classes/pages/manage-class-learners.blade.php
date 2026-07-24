@@ -29,12 +29,12 @@
         </div>
     </x-filament::section>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;"
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; align-items: stretch;"
         x-data="sortableLists()" x-init="initSortable">
 
         {{-- LEFT: TERDAFTAR --}}
         <div
-            style="background: #fff; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); border: 1px solid #e5e7eb; display: flex; flex-direction: column;">
+            style="background: #fff; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); border: 1px solid #e5e7eb; display: flex; flex-direction: column; height: 100%;">
             <div
                 style="padding: 1rem 1.25rem; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -56,10 +56,9 @@
                         @php $capPct = min($this->getCapacityPercent(), 100); @endphp
                         <div
                             style="height: 100%; width: {{ $capPct }}%; border-radius: 9999px; transition: width 0.3s; background-color:
-                                @if($capPct >= 100) #ef4444
+                                @if ($capPct >= 100) #ef4444
                                 @elseif($capPct >= 80) #f59e0b
-                                @else #22c55e
-                                @endif;">
+                                @else #22c55e @endif;">
                         </div>
                     </div>
                     <span style="font-size: 0.75rem; color: #6b7280; white-space: nowrap;">
@@ -74,18 +73,20 @@
                 <div style="position: relative;">
                     <x-filament::icon alias="heroicon-o-magnifying-glass"
                         style="position: absolute; left: 0.625rem; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; color: #9ca3af;" />
-                    <input wire:model.live.debounce.300ms="searchRegistered" type="text" placeholder="Cari terdaftar..."
+                    <input wire:model.live.debounce.300ms="searchRegistered" type="text"
+                        placeholder="Cari terdaftar..."
                         style="display: block; width: 100%; padding: 0.5rem 0.5rem 0.5rem 2rem; border-radius: 0.375rem; border: 1px solid #d1d5db; font-size: 0.8rem; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
             {{-- Bulk actions --}}
-            @if(count($selectedRegistered) > 0)
+            @if (count($selectedRegistered) > 0)
                 <div
                     style="padding: 0.5rem 1.25rem; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; gap: 0.5rem; background: #fef2f2;">
                     <span style="font-size: 0.75rem; color: #991b1b; font-weight: 500;">{{ count($selectedRegistered) }}
                         terpilih</span>
-                    <button wire:click="removeMultipleFromClass" wire:confirm="Keluarkan {{ count($selectedRegistered) }} peserta terpilih?"
+                    <button wire:click="removeMultipleFromClass"
+                        wire:confirm="Keluarkan {{ count($selectedRegistered) }} peserta terpilih?"
                         style="margin-left: auto; font-size: 0.75rem; padding: 0.25rem 0.625rem; border-radius: 0.375rem; border: 1px solid #fca5a5; background: #fff; color: #dc2626; cursor: pointer;">
                         Keluarkan Terpilih
                     </button>
@@ -98,13 +99,13 @@
             @endif
 
             <div wire:key="registered-{{ $class->id }}" x-ref="registeredList"
-                style="padding: 0.75rem; min-height: 420px; max-height: 600px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.375rem; background-color: #f8fafc; border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem;">
+                style="padding: 0.75rem; min-height: 420px; max-height: 600px; overflow-y: auto; display: flex; flex-direction: column; flex: 1; gap: 0.375rem; background-color: #f8fafc; border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem;">
                 {{-- Select All --}}
                 <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.5rem;">
-                    <label class="sortable-ignore" style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: #6b7280; cursor: pointer;">
+                    <label class="sortable-ignore"
+                        style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: #6b7280; cursor: pointer;">
                         <input type="checkbox" class="sortable-ignore" wire:click="selectAllRegistered"
-                            @if(count($selectedRegistered) === count($registeredLearners) && count($registeredLearners) > 0) checked @endif
-                            style="accent-color: #2563eb;">
+                            @if (count($selectedRegistered) === count($registeredLearners) && count($registeredLearners) > 0) checked @endif style="accent-color: #2563eb;">
                         Pilih Semua
                     </label>
                 </div>
@@ -113,8 +114,8 @@
                     <div wire:key="cl-{{ $item->id }}" data-clid="{{ $item->id }}"
                         data-lid="{{ $item->learner_id }}"
                         style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background-color: {{ $isLocked ? '#fef2f2' : '#eff6ff' }}; border: 1px solid {{ $isLocked ? '#fecaca' : '#bfdbfe' }}; border-radius: 0.5rem; cursor: {{ $isLocked ? 'default' : 'grab' }}; opacity: {{ $isLocked ? '0.8' : '1' }};">
-                        <input type="checkbox" class="sortable-ignore" wire:model.live="selectedRegistered" value="{{ $item->id }}"
-                            style="flex-shrink: 0; accent-color: #2563eb;">
+                        <input type="checkbox" class="sortable-ignore" wire:model.live="selectedRegistered"
+                            value="{{ $item->id }}" style="flex-shrink: 0; accent-color: #2563eb;">
                         <x-filament::icon alias="heroicon-o-grip-vertical"
                             style="width: 1rem; height: 1rem; color: {{ $isLocked ? '#fca5a5' : '#60a5fa' }}; flex-shrink: 0;" />
                         <div style="flex: 1; overflow: hidden;">
@@ -123,30 +124,31 @@
                                     style="font-size: 0.875rem; font-weight: 600; color: #111827; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     {{ $item->learner->name }}
                                 </p>
-                                @if($isLocked)
+                                @if ($isLocked)
                                     <x-filament::icon alias="heroicon-o-lock-closed"
-                                        style="width: 0.875rem; height: 0.875rem; color: #ef4444; flex-shrink: 0;" title="Memiliki data nilai" />
+                                        style="width: 0.875rem; height: 0.875rem; color: #ef4444; flex-shrink: 0;"
+                                        title="Memiliki data nilai" />
                                 @endif
                             </div>
-                            <p style="font-size: 0.75rem; color: #6b7280; margin: 0;">NIS: {{ $item->learner->nis }}</p>
+                            <p style="font-size: 0.75rem; color: #6b7280; margin: 0;">NIS: {{ $item->learner->nis }}
+                            </p>
                         </div>
                         <span
                             style="flex-shrink: 0; font-size: 0.65rem; color: #9ca3af; text-align: right; line-height: 1.2;">
                             {{ $item->semester?->name }}
                         </span>
-                        @if(!$isLocked)
+                        @if (!$isLocked)
                             <button class="sortable-ignore" wire:click="removeFromClass({{ $item->id }})"
                                 wire:confirm="Keluarkan {{ $item->learner->name }} dari kelas?"
                                 style="flex-shrink: 0; border: none; background: none; padding: 0.125rem; cursor: pointer; color: #ef4444;"
                                 title="Keluarkan">
-                                <x-filament::icon alias="heroicon-o-x-mark"
-                                    style="width: 1rem; height: 1rem;" />
+                                <x-filament::icon alias="heroicon-o-x-mark" style="width: 1rem; height: 1rem;" />
                             </button>
                         @endif
                     </div>
                 @empty
                     <div wire:key="empty-registered"
-                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 16rem; color: #9ca3af;">
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; height: 100%; min-height: 16rem; color: #9ca3af;">
                         <x-filament::icon alias="heroicon-o-users"
                             style="width: 2.5rem; height: 2.5rem; margin-bottom: 0.5rem;" />
                         <p style="font-size: 0.875rem; margin: 0;">Belum ada peserta didik</p>
@@ -159,7 +161,7 @@
 
         {{-- RIGHT: SEMUA PESERTA --}}
         <div
-            style="background: #fff; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); border: 1px solid #e5e7eb; display: flex; flex-direction: column;">
+            style="background: #fff; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); border: 1px solid #e5e7eb; display: flex; flex-direction: column; height: 100%;">
             <div
                 style="padding: 1rem 1.25rem; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -196,16 +198,18 @@
                 <div style="position: relative;">
                     <x-filament::icon alias="heroicon-o-magnifying-glass"
                         style="position: absolute; left: 0.625rem; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; color: #9ca3af;" />
-                    <input wire:model.live.debounce.300ms="searchAvailable" type="text" placeholder="Cari nama atau NIS..."
+                    <input wire:model.live.debounce.300ms="searchAvailable" type="text"
+                        placeholder="Cari nama atau NIS..."
                         style="display: block; width: 100%; padding: 0.5rem 0.5rem 0.5rem 2rem; border-radius: 0.375rem; border: 1px solid #d1d5db; font-size: 0.8rem; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
             {{-- Bulk actions --}}
-            @if(count($selectedAvailable) > 0)
+            @if (count($selectedAvailable) > 0)
                 <div
                     style="padding: 0.5rem 1.25rem; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; gap: 0.5rem; background: #f0fdf4;">
-                    <span style="font-size: 0.75rem; color: #166534; font-weight: 500;">{{ count($selectedAvailable) }}
+                    <span
+                        style="font-size: 0.75rem; color: #166534; font-weight: 500;">{{ count($selectedAvailable) }}
                         terpilih</span>
                     <button wire:click="addMultipleToClass"
                         style="margin-left: auto; font-size: 0.75rem; padding: 0.25rem 0.625rem; border-radius: 0.375rem; border: 1px solid #86efac; background: #fff; color: #16a34a; cursor: pointer;">
@@ -215,13 +219,13 @@
             @endif
 
             <div wire:key="available-{{ $class->id }}" x-ref="availableList"
-                style="padding: 0.75rem; min-height: 420px; max-height: 600px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.375rem; background-color: #f8fafc; border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem;">
+                style="padding: 0.75rem; min-height: 420px; max-height: 600px; overflow-y: auto; display: flex; flex-direction: column; flex: 1; gap: 0.375rem; background-color: #f8fafc; border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem;">
                 {{-- Select All --}}
                 <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.5rem;">
-                    <label class="sortable-ignore" style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: #6b7280; cursor: pointer;">
+                    <label class="sortable-ignore"
+                        style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: #6b7280; cursor: pointer;">
                         <input type="checkbox" class="sortable-ignore" wire:click="selectAllAvailable"
-                            @if(count($selectedAvailable) === count($unregisteredLearners) && count($unregisteredLearners) > 0) checked @endif
-                            style="accent-color: #2563eb;">
+                            @if (count($selectedAvailable) === count($unregisteredLearners) && count($unregisteredLearners) > 0) checked @endif style="accent-color: #2563eb;">
                         Pilih Semua
                     </label>
                     <button class="sortable-ignore" wire:click="moveAllFiltered"
@@ -234,8 +238,8 @@
                     @php $prevClass = $previousClassMap[$learner->id] ?? '-'; @endphp
                     <div wire:key="l-{{ $learner->id }}" data-lid="{{ $learner->id }}"
                         style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.5rem; cursor: grab;">
-                        <input type="checkbox" class="sortable-ignore" wire:model.live="selectedAvailable" value="{{ $learner->id }}"
-                            style="flex-shrink: 0; accent-color: #2563eb;">
+                        <input type="checkbox" class="sortable-ignore" wire:model.live="selectedAvailable"
+                            value="{{ $learner->id }}" style="flex-shrink: 0; accent-color: #2563eb;">
                         <x-filament::icon alias="heroicon-o-grip-vertical"
                             style="width: 1rem; height: 1rem; color: #9ca3af; flex-shrink: 0;" />
                         <div style="flex: 1; overflow: hidden;">
@@ -243,19 +247,20 @@
                                 style="font-size: 0.875rem; font-weight: 600; color: #111827; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 {{ $learner->name }}
                             </p>
-                            <div style="display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; margin-top: 0.125rem;">
+                            <div
+                                style="display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; margin-top: 0.125rem;">
                                 <span style="font-size: 0.7rem; color: #6b7280;">NIS: {{ $learner->nis }}</span>
                                 <span
                                     style="font-size: 0.65rem; padding: 0.063rem 0.375rem; border-radius: 9999px; background: #e0e7ff; color: #4338ca;">
                                     {{ $learner->gender === 'L' ? 'L' : 'P' }}
                                 </span>
-                                @if($learner->program)
+                                @if ($learner->program)
                                     <span
                                         style="font-size: 0.65rem; padding: 0.063rem 0.375rem; border-radius: 9999px; background: #dbeafe; color: #1d4ed8;">
                                         {{ $learner->program->code ?? $learner->program->name }}
                                     </span>
                                 @endif
-                                @if($prevClass !== '-')
+                                @if ($prevClass !== '-')
                                     <span
                                         style="font-size: 0.65rem; padding: 0.063rem 0.375rem; border-radius: 9999px; background: #f3f4f6; color: #6b7280;">
                                         Sebelumnya: {{ str($prevClass)->limit(20) }}
@@ -266,17 +271,18 @@
                     </div>
                 @empty
                     <div wire:key="empty-available"
-                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 16rem; color: #9ca3af;">
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; height: 100%; min-height: 16rem; color: #9ca3af;">
                         <x-filament::icon alias="heroicon-o-check-circle"
                             style="width: 2.5rem; height: 2.5rem; margin-bottom: 0.5rem;" />
                         <p style="font-size: 0.875rem; margin: 0;">Semua peserta sudah terdaftar</p>
-                        <p style="font-size: 0.75rem; margin: 0.25rem 0 0;">Atur ulang filter untuk mencari peserta lain
+                        <p style="font-size: 0.75rem; margin: 0.25rem 0 0;">Atur ulang filter untuk mencari peserta
+                            lain
                         </p>
                     </div>
                 @endforelse
 
                 {{-- Load More --}}
-                @if($hasMoreAvailable)
+                @if ($hasMoreAvailable)
                     <div class="sortable-ignore" style="padding: 0.5rem; text-align: center;">
                         <button class="sortable-ignore" wire:click="loadMore" wire:loading.attr="disabled"
                             style="width: 100%; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #d1d5db; background: #fff; color: #374151; font-size: 0.8rem; cursor: pointer;">

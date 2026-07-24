@@ -18,9 +18,13 @@ class BackupHistoryFactory extends Factory
     public function definition(): array
     {
         return [
-            'file_name' => fake()->word().'.sql',
+            'filename' => 'backup-db-'.now()->format('Y-m-d-H-i-s').'.sql',
             'file_size' => fake()->optional()->numberBetween(1024, 10485760),
-            'backup_type' => fake()->optional()->randomElement(['full', 'manual', 'automated']),
+            'type' => 'database',
+            'status' => 'completed',
+            'started_at' => fake()->optional()->dateTimeThisMonth(),
+            'completed_at' => fake()->optional()->dateTimeThisMonth(),
+            'notes' => null,
             'created_by' => fake()->optional()->numberBetween(1, 10),
         ];
     }

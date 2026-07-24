@@ -48,11 +48,6 @@ class ManageAttendancePivot extends Page implements HasTable
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('back')
-                ->label('Kembali')
-                ->icon('heroicon-o-arrow-left')
-                ->url(fn (): string => AttendanceResource::getUrl('manage'))
-                ->color('gray'),
             Action::make('manage')
                 ->label('Input Presensi')
                 ->icon('heroicon-o-pencil-square')

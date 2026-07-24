@@ -64,13 +64,13 @@ class ReportAttendances extends Page implements HasTable
             ? Semester::where('academic_year_id', $activeYear->id)->where('is_active', true)->first()
             : null;
 
-        $this->form->fill([
+        $this->filterForm->fill([
             'academic_year_id' => $activeYear?->id,
             'semester_id' => $activeSemester?->id,
         ]);
     }
 
-    public function form(Schema $schema): Schema
+    public function filterForm(Schema $schema): Schema
     {
         return $schema
             ->components([
